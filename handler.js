@@ -85,7 +85,7 @@ export default async function (sock, m) {
                 username: process.env.USERNAME_DIGI,
                 buyer_sku_code: buyerSkuCode,
                 customer_no: customerNo,
-                ref_id: process.env.APIKEY,
+                ref_id: refId,
                 sign: signature,
               };
               console.log(makeRequestBody);
