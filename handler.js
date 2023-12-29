@@ -7,6 +7,9 @@ import fetch from 'node-fetch';
 
 export default async function (sock, m) {
   const senderNumber = m.key.remoteJid;
+  const groupMetadata = await sock.groupMetadata(senderNumber).catch((e) => {});
+  const isGroup = senderNumber.endsWith('@g.us');
+  console.log('sdjsd;', groupMetadata);
   // const body =
   //   message.message.conversation ||
   //   (message.message.extendedTextMessage &&
@@ -73,6 +76,7 @@ export default async function (sock, m) {
       switch (pesan) {
         case 'digi':
           {
+            if (!isGroup) return reply('hanya group');
             if (who == '6289649178812@s.whatsapp.net') {
               let refId = makeid(7);
               const apiUrl = 'https://api.digiflazz.com/v1/transaction';
@@ -94,7 +98,7 @@ export default async function (sock, m) {
                 sign: signature,
               };
               console.log(makeRequestBody);
-              // reply(`*TUNGGU SEBENTAR YAK*`);
+              reply(`*TUNGGU SEBENTAR YAK*`);
               function checkTransactionStatus() {
                 // Make the POST request to initiate the transaction
                 fetch(apiUrl, {
@@ -108,14 +112,14 @@ export default async function (sock, m) {
                   .then((data) => {
                     const status = data.data.status;
                     let balas = `
-              ┏━━ꕥ *「 DETAIL ORDERAN 」* ꕥ━⬣
-              ┃> *ID GAME:* ${data.data.customer_no}
-              ┃> *PRODUK:* ${data.data.buyer_sku_code}
-              ┃> *SN:* ${data.data.sn}
-              ┃> *STATUS:* ${data.data.message}
-              ┃> *Ref_Id:* ${data.data.ref_id}
-              ┃> *RC STATUS:* ${data.data.rc}
-              ┗━━━━━━━━━━━━━━━━━━━ꕥ`;
+┏━━ꕥ *「 DETAIL ORDERAN 」* ꕥ━⬣
+┃> *ID GAME:* ${data.data.customer_no}
+┃> *PRODUK:* ${data.data.buyer_sku_code}
+┃> *SN:* ${data.data.sn}
+┃> *STATUS:* ${data.data.message}
+┃> *Ref_Id:* ${data.data.ref_id}
+┃> *RC STATUS:* ${data.data.rc}
+┗━━━━━━━━━━━━━━━━━━━ꕥ`;
 
                     if (status === 'Pending') {
                       // Wait for a few seconds before checking the status again
@@ -150,7 +154,10 @@ export default async function (sock, m) {
           }
           break;
         case 'test':
-          reply(process.env.APIKEY);
+          {
+            if (!isGroup) return reply('hanya group');
+          }
+          break;
       }
     }
   } catch (error) {
