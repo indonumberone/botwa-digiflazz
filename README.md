@@ -1,2 +1,2 @@
-# TRIBot
-#### Using a WhatsApp bot for helping in our college activities and reminding in our study schedule.
+# bot digi
+#### Using a WhatsApp bot for dodolan u know dodolan???
