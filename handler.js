@@ -57,12 +57,17 @@ export default async function (sock, m) {
     await sock.sendMessage(senderNumber, {text}, {quoted: m});
   };
 
-  let prefix = /^[\\/!#.]/gi.test(body) ? body.match(/^[\\/!#.]/gi) : '/';
-  const firstmess = body.startsWith(prefix);
-  let pesan = body.replace(prefix, '').trim().split(/ +/).shift().toLowerCase();
-  m.args = body.trim().split(/ +/).slice(1);
-
   try {
+    let prefix = /^[\\/!#.]/gi.test(body) ? body.match(/^[\\/!#.]/gi) : '/';
+    const firstmess = body.startsWith(prefix);
+    let pesan = body
+      .replace(prefix, '')
+      .trim()
+      .split(/ +/)
+      .shift()
+      .toLowerCase();
+    m.args = body.trim().split(/ +/).slice(1);
+
     if (firstmess) {
       let who = m.key.participant;
       switch (pesan) {
@@ -79,7 +84,7 @@ export default async function (sock, m) {
                 .createHash('md5')
                 .update(process.env.USERNAME_DIGI + process.env.APIKEY + refId)
                 .digest('hex');
-
+              console.log(signature);
               // Prepare the request body for initiating the transaction
               const makeRequestBody = {
                 username: process.env.USERNAME_DIGI,
