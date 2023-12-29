@@ -76,7 +76,7 @@ export default async function (sock, m) {
               // Calculate the signature using the specified formula: md5(username + apiKey + ref_id)
               const signature = crypto
                 .createHash('md5')
-                .update(username + process.env.APIKEY + refId)
+                .update(process.env.USERNAME + process.env.APIKEY + refId)
                 .digest('hex');
 
               // Prepare the request body for initiating the transaction
