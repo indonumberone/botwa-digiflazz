@@ -77,7 +77,10 @@ export default async function (sock, m) {
         case 'digi':
           {
             if (!isGroup) return reply('hanya group');
-            if (who == '6289649178812@s.whatsapp.net') {
+            if (
+              who == '6289649178812@s.whatsapp.net' ||
+              who == '6281533852623@s.whatsapp.net'
+            ) {
               let refId = makeid(7);
               const apiUrl = 'https://api.digiflazz.com/v1/transaction';
               const buyerSkuCode = m.args[0]; // Replace this with the product code
