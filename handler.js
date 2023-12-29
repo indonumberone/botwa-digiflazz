@@ -3,6 +3,7 @@ import 'dotenv/config';
 import {makeid} from './lib/makeid.js';
 import fs from 'fs';
 import crypto from 'crypto';
+import fetch from 'node-fetch';
 
 export default async function (sock, m) {
   const senderNumber = m.key.remoteJid;
@@ -76,18 +77,19 @@ export default async function (sock, m) {
               // Calculate the signature using the specified formula: md5(username + apiKey + ref_id)
               const signature = crypto
                 .createHash('md5')
-                .update(process.env.USERNAME + process.env.APIKEY + refId)
+                .update(process.env.USERNAME_DIGI + process.env.APIKEY + refId)
                 .digest('hex');
 
               // Prepare the request body for initiating the transaction
               const makeRequestBody = {
-                username: process.env.USERNAME,
+                username: process.env.USERNAME_DIGI,
                 buyer_sku_code: buyerSkuCode,
                 customer_no: customerNo,
                 ref_id: process.env.APIKEY,
                 sign: signature,
               };
-              reply(`*TUNGGU SEBENTAR YAK*`);
+              console.log(makeRequestBody);
+              // reply(`*TUNGGU SEBENTAR YAK*`);
               function checkTransactionStatus() {
                 // Make the POST request to initiate the transaction
                 fetch(apiUrl, {
