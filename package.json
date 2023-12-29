@@ -1,0 +1,23 @@
+{
+  "name": "botwa",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "test": "nodemon index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.4.1",
+    "dotenv": "^16.3.1",
+    "lowdb": "^6.1.1",
+    "moment-timezone": "^0.5.43",
+    "nodemon": "^3.0.2",
+    "phin": "^3.7.0",
+    "wa-sticker-formatter": "^4.4.4"
+  }
+}
