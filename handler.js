@@ -81,7 +81,7 @@ export default async function (sock, m) {
 
               // Prepare the request body for initiating the transaction
               const makeRequestBody = {
-                username: username,
+                username: process.env.USERNAME,
                 buyer_sku_code: buyerSkuCode,
                 customer_no: customerNo,
                 ref_id: process.env.APIKEY,
