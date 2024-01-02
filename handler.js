@@ -1,7 +1,7 @@
 import {downloadMediaMessage, getContentType} from '@whiskeysockets/baileys';
 import 'dotenv/config';
 import {makeid} from './lib/makeid.js';
-import fs from 'fs';
+import dinero from 'dinero.js';
 import crypto from 'crypto';
 import fetch from 'node-fetch';
 
@@ -9,7 +9,7 @@ export default async function (sock, m) {
   const senderNumber = m.key.remoteJid;
   const groupMetadata = await sock.groupMetadata(senderNumber).catch((e) => {});
   const isGroup = senderNumber.endsWith('@g.us');
-  console.log('sdjsd;', groupMetadata);
+  // console.log('sdjsd;', groupMetadata);
   // const body =
   //   message.message.conversation ||
   //   (message.message.extendedTextMessage &&
@@ -79,7 +79,9 @@ export default async function (sock, m) {
             if (!isGroup) return reply('hanya group');
             if (
               who == '6289649178812@s.whatsapp.net' ||
-              who == '6281533852623@s.whatsapp.net'
+              who == '6281533852623@s.whatsapp.net' ||
+              who == '6285293001966@s.whatsapp.net' ||
+              who == '6285742736537@s.whatsapp.net'
             ) {
               let refId = makeid(7);
               const apiUrl = 'https://api.digiflazz.com/v1/transaction';
@@ -156,9 +158,157 @@ export default async function (sock, m) {
             }
           }
           break;
-        case 'test':
+        case 'saldo':
           {
             if (!isGroup) return reply('hanya group');
+            if (
+              who == '6289649178812@s.whatsapp.net' ||
+              who == '6285293001966@s.whatsapp.net' ||
+              who == '6285742736537@s.whatsapp.net'
+            ) {
+              const apiUrl = 'https://api.digiflazz.com/v1/cek-saldo';
+              const signature = crypto
+                .createHash('md5')
+                .update(process.env.USERNAME_DIGI + process.env.APIKEY + 'depo')
+                .digest('hex');
+              console.log(signature);
+              // Prepare the request body for initiating the transaction
+              const makeRequestBody = {
+                cmd: 'deposit',
+                username: process.env.USERNAME_DIGI,
+                sign: signature,
+              };
+              console.log(makeRequestBody);
+              reply(`*PENGECEKAN SALDO*`);
+              function checkTransactionStatus() {
+                // Make the POST request to initiate the transaction
+                fetch(apiUrl, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(makeRequestBody),
+                })
+                  .then((response) => response.json())
+                  .then((data) => {
+                    const status = data.data.status;
+                    let convert = dinero({
+                      amount: data.data.deposit,
+                      currency: 'IDR',
+                      precision: 0,
+                    }).toFormat();
+                    console.log(convert);
+
+                    let balas = `
+┏━━ꕥ *「 SALDO YANG DIMILIKI 」* ꕥ━⬣
+┃> *SISA SALDO:* ${convert}
+┗━━━━━━━━━━━━━━━━━━━ꕥ`;
+
+                    if (status === 'Pending') {
+                      // Wait for a few seconds before checking the status again
+                      setTimeout(() => {
+                        checkTransactionStatus(); // Call the function again to check the status
+                      }, 5000);
+                    } else if (status === 'Gagal') {
+                      reply(`*Transaction failed.* ${data.data.message}`);
+                    } else {
+                      // If the status is not 'Pending' or 'Failed', set the reply
+                      reply(balas);
+                    }
+                  })
+                  .catch((error) => {
+                    // Handle any errors that occur during the API request
+                    console.error('Error:', error);
+                    reply(
+                      'Gagal memproses permintaan, silakan coba lagi nanti.',
+                    );
+                  });
+              }
+
+              // Call the function to initiate the API request and check the status
+              checkTransactionStatus();
+            } else {
+              let penyusub = m.key.participant.split('@')[0];
+              var kirimke = '6289649178812@s.whatsapp.net';
+              sock.sendMessage(kirimke, {
+                text: `penyusub ki ${penyusub}`,
+              });
+            }
+          }
+          break;
+        case 'list':
+          {
+            if (!isGroup) return reply('hanya group');
+            if (
+              who == '6289649178812@s.whatsapp.net' ||
+              who == '6285293001966@s.whatsapp.net' ||
+              who == '6285742736537@s.whatsapp.net'
+            ) {
+              const apiUrl = 'https://api.digiflazz.com/v1/price-list';
+              const signature = crypto
+                .createHash('md5')
+                .update(
+                  process.env.USERNAME_DIGI +
+                    process.env.DEV_APIKEY +
+                    'pricelist',
+                )
+                .digest('hex');
+              console.log(signature);
+              // Prepare the request body for initiating the transaction
+              const makeRequestBody = {
+                cmd: 'prepaid',
+                username: process.env.USERNAME_DIGI,
+                sign: signature,
+              };
+              // console.log(makeRequestBody);
+              reply(`*LIST HARGA SEDANG DIMUAT*`);
+              function checkTransactionStatus() {
+                // Make the POST request to initiate the transaction
+                fetch(apiUrl, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(makeRequestBody),
+                })
+                  .then((response) => response.json())
+                  .then((data) => {
+                    const status = data.data.status;
+                    console.log(data);
+                    let balas = `
+┏━━ꕥ *「 LIST HARGA 」* ꕥ━⬣
+┃> *SISA SALDO:* 
+┗━━━━━━━━━━━━━━━━━━━ꕥ`;
+                    if (status === 'Pending') {
+                      // Wait for a few seconds before checking the status again
+                      setTimeout(() => {
+                        checkTransactionStatus(); // Call the function again to check the status
+                      }, 5000);
+                    } else if (status === 'Gagal') {
+                      reply(`*Transaction failed.* ${data.data.message}`);
+                    } else {
+                      // If the status is not 'Pending' or 'Failed', set the reply
+                      reply(balas);
+                    }
+                  })
+                  .catch((error) => {
+                    // Handle any errors that occur during the API request
+                    console.error('Error:', error);
+                    reply(
+                      'Gagal memproses permintaan, silakan coba lagi nanti.',
+                    );
+                  });
+              }
+
+              // Call the function to initiate the API request and check the status
+              checkTransactionStatus();
+            } else {
+              let penyusub = m.key.participant.split('@')[0];
+              var kirimke = '6289649178812@s.whatsapp.net';
+              sock.sendMessage(kirimke, {
+                text: `penyusub ki ${penyusub}`,
+              });
+            }
           }
           break;
       }

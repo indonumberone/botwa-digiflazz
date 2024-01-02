@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@whiskeysockets/baileys": "^6.4.1",
+    "dinero.js": "^1.9.1",
     "dotenv": "^16.3.1",
     "lowdb": "^6.1.1",
     "moment-timezone": "^0.5.43",
