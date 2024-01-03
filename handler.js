@@ -70,7 +70,7 @@ export default async function (sock, m) {
       .shift()
       .toLowerCase();
     m.args = body.trim().split(/ +/).slice(1);
-
+    let q = m.args.join('');
     if (firstmess) {
       let who = m.key.participant;
       switch (pesan) {
@@ -91,9 +91,7 @@ export default async function (sock, m) {
               // Calculate the signature using the specified formula: md5(username + apiKey + ref_id)
               const signature = crypto
                 .createHash('md5')
-                .update(
-                  process.env.USERNAME_DIGI + process.env.DEV_APIKEY + refId,
-                )
+                .update(process.env.USERNAME_DIGI + process.env.APIKEY + refId)
                 .digest('hex');
               console.log(signature);
               // Prepare the request body for initiating the transaction
@@ -171,9 +169,7 @@ export default async function (sock, m) {
               const apiUrl = 'https://api.digiflazz.com/v1/cek-saldo';
               const signature = crypto
                 .createHash('md5')
-                .update(
-                  process.env.USERNAME_DIGI + process.env.DEV_APIKEY + 'depo',
-                )
+                .update(process.env.USERNAME_DIGI + process.env.APIKEY + 'depo')
                 .digest('hex');
               console.log(signature);
               // Prepare the request body for initiating the transaction
@@ -252,9 +248,7 @@ export default async function (sock, m) {
               const signature = crypto
                 .createHash('md5')
                 .update(
-                  process.env.USERNAME_DIGI +
-                    process.env.DEV_APIKEY +
-                    'pricelist',
+                  process.env.USERNAME_DIGI + process.env.APIKEY + 'pricelist',
                 )
                 .digest('hex');
               console.log(signature);
@@ -294,9 +288,99 @@ export default async function (sock, m) {
                       }).toFormat()}
 ┃>STATUS BUYER ${list.buyer_product_status}
 ┃>STATUS SELLER ${list.seller_product_status}
+┃>CUT OFF ${list.start_cut_off}-${list.end_cut_off}
 `,
-                    )}
+                    )}┗━━━━━━━━━━━━━━━━━━━ꕥ`;
+                    if (status === 'Pending') {
+                      // Wait for a few seconds before checking the status again
+                      setTimeout(() => {
+                        checkTransactionStatus(); // Call the function again to check the status
+                      }, 5000);
+                    } else if (status === 'Gagal') {
+                      reply(`*Transaction failed.* ${data.data.message}`);
+                    } else {
+                      // If the status is not 'Pending' or 'Failed', set the reply
+                      reply(balas);
+                    }
+                  })
+                  .catch((error) => {
+                    // Handle any errors that occur during the API request
+                    console.error('Error:', error);
+                    reply(
+                      'Gagal memproses permintaan, silakan coba lagi nanti.',
+                    );
+                  });
+              }
+
+              // Call the function to initiate the API request and check the status
+              checkTransactionStatus();
+            } else {
+              let penyusub = m.key.participant.split('@')[0];
+              var kirimke = '6289649178812@s.whatsapp.net';
+              sock.sendMessage(kirimke, {
+                text: `penyusub ki ${penyusub}`,
+              });
+            }
+          }
+          break;
+        case 'deposit':
+          {
+            let q = parseInt(m.args.join());
+            if (!isGroup) return reply('hanya group');
+            if (
+              who == '6289649178812@s.whatsapp.net' ||
+              who == '6285293001966@s.whatsapp.net' ||
+              who == '6285742736537@s.whatsapp.net'
+            ) {
+              const apiUrl = 'https://api.digiflazz.com/v1/deposit';
+              const signature = crypto
+                .createHash('md5')
+                .update(
+                  process.env.USERNAME_DIGI + process.env.APIKEY + 'deposit',
+                )
+                .digest('hex');
+              console.log(signature);
+              // if (q != int) return reply('masukan nominal');
+              console.log(typeof q);
+              const makeRequestBody = {
+                username: process.env.USERNAME_DIGI,
+                amount: q,
+                Bank: 'BCA',
+                owner_name: 'ADYSTI EREN FATTAAH NURRIZQI',
+                sign: signature,
+              };
+              console.log(makeRequestBody);
+              reply(`*WAIT A MINUTE*`);
+              function checkTransactionStatus() {
+                // Make the POST request to initiate the transaction
+                fetch(apiUrl, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(makeRequestBody),
+                })
+                  .then((response) => response.json())
+                  .then((data) => {
+                    console.log(data);
+                    const status = data.data.status;
+                    if (data.data.rc != '00')
+                      return reply(
+                        `
+┏━━ꕥ *「 DEPOSIT SALDO GAGAL 」* ꕥ━⬣
+┃> *DEPOSIT:* ${data.data.deposit}
+┃> *MESSAGE:* ${data.data.message}
+┗━━━━━━━━━━━━━━━━━━━ꕥ;
+                   `,
+                      );
+
+                    let balas = `
+┏━━ꕥ *「 SALDO YANG DIMILIKI 」* ꕥ━⬣
+┃> *NAMA BANK:* BCA
+┃> *JUMLAH TRANSFER:* ${data.data.amount}
+┃> *CATATAN:* ${data.data.notes}
 ┗━━━━━━━━━━━━━━━━━━━ꕥ`;
+
                     if (status === 'Pending') {
                       // Wait for a few seconds before checking the status again
                       setTimeout(() => {
