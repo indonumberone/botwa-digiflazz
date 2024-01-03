@@ -91,7 +91,9 @@ export default async function (sock, m) {
               // Calculate the signature using the specified formula: md5(username + apiKey + ref_id)
               const signature = crypto
                 .createHash('md5')
-                .update(process.env.USERNAME_DIGI + process.env.APIKEY + refId)
+                .update(
+                  process.env.USERNAME_DIGI + process.env.DEV_APIKEY + refId,
+                )
                 .digest('hex');
               console.log(signature);
               // Prepare the request body for initiating the transaction
@@ -169,7 +171,9 @@ export default async function (sock, m) {
               const apiUrl = 'https://api.digiflazz.com/v1/cek-saldo';
               const signature = crypto
                 .createHash('md5')
-                .update(process.env.USERNAME_DIGI + process.env.APIKEY + 'depo')
+                .update(
+                  process.env.USERNAME_DIGI + process.env.DEV_APIKEY + 'depo',
+                )
                 .digest('hex');
               console.log(signature);
               // Prepare the request body for initiating the transaction
@@ -275,9 +279,23 @@ export default async function (sock, m) {
                   .then((data) => {
                     const status = data.data.status;
                     console.log(data);
+                    let iki = '';
                     let balas = `
 ┏━━ꕥ *「 LIST HARGA 」* ꕥ━⬣
-┃> *SISA SALDO:* 
+┃> *LIST SEMUA HARGA:* ${data.data.map(
+                      (list) => `
+┃>KATEGORI ${list.category}
+┃>PRODUK ${list.product_name}
+┃>NAMA SELLER ${list.seller_name}
+┃>HARGA ${dinero({
+                        amount: list.price,
+                        currency: 'IDR',
+                        precision: 0,
+                      }).toFormat()}
+┃>STATUS BUYER ${list.buyer_product_status}
+┃>STATUS SELLER ${list.seller_product_status}
+`,
+                    )}
 ┗━━━━━━━━━━━━━━━━━━━ꕥ`;
                     if (status === 'Pending') {
                       // Wait for a few seconds before checking the status again
