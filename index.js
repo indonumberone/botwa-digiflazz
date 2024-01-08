@@ -46,16 +46,21 @@ async function connectToWhatsApp() {
 
   sock.ev.on('messages.upsert', async (m) => {
     m.messages.forEach(async (message) => {
-      await handler(sock, message);
+      await handler(sock, message, m);
 
-      // if (textMessage == "halo") {
-      //   await sock.sendMessage(
-      //     senderNumber,
-      //     { text: "Halo juga" },
-      //     { quoted: message }
-      //   );
+      // if (message || message.ephemeralMessage.message == 'halo') {
+      //   let sender = message.key.remoteJid || message.key.participant;
+
+      //   setTimeout(async () => {
+      //     await sock.sendMessage(
+      //       sender,
+      //       {text: 'sjnjdkbsnjld juga'},
+      //       {quoted: message},
+      //     );
+      //     console.log(message);
+      //   }, 9000);
       // }
-      // console.log(textMessage);
+      // console.log(message);
       // try {
       // 	await sock.sendPresenceUpdate('composing', message.key.remoteJid)
       // 	await messageHandler(sock, message);
@@ -73,10 +78,7 @@ async function connectToWhatsApp() {
 
     // console.log(m)
 
-    // if (m.messages[0].message.conversation == 'halo') {
-    //     await sock.sendMessage(m.messages[0].key.remoteJid, { text: 'Hello there!' }, { quoted: m.messages[0] });
-    // }
-    // console.log(JSON.stringify(m, undefined, 2))
+    // console.log(JSON.stringify(m, undefined, 2));
 
     // console.log('replying to', m.messages[0].key.remoteJid)
     // await sock.sendMessage(m.messages[0].key.remoteJid, { text: 'Hello there!' })

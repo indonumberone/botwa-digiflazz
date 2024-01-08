@@ -9,6 +9,8 @@ export default async function (sock, m) {
   const senderNumber = m.key.remoteJid;
   const groupMetadata = await sock.groupMetadata(senderNumber).catch((e) => {});
   const isGroup = senderNumber.endsWith('@g.us');
+  let iki = m.args;
+  console.log(m);
   // console.log('sdjsd;', groupMetadata);
   // const body =
   //   message.message.conversation ||
@@ -76,6 +78,7 @@ export default async function (sock, m) {
       switch (pesan) {
         case 'digi':
           {
+            let order = '';
             if (!isGroup) return reply('hanya group');
             if (
               who == '6289649178812@s.whatsapp.net' ||
@@ -87,7 +90,7 @@ export default async function (sock, m) {
               const apiUrl = 'https://api.digiflazz.com/v1/transaction';
               const buyerSkuCode = m.args[0]; // Replace this with the product code
               const customerNo = m.args[1]; // Replace this with the customer's phone number
-
+              order = buyerSkuCode;
               // Calculate the signature using the specified formula: md5(username + apiKey + ref_id)
               const signature = crypto
                 .createHash('md5')
@@ -117,7 +120,7 @@ export default async function (sock, m) {
                   .then((data) => {
                     const status = data.data.status;
                     let balas = `
-┏━━ꕥ *「 DETAIL ORDERAN 」* ꕥ━⬣
+┏━━ꕥ *「 DETAIL ORDERAN ${order.toUpperCase()}」* ꕥ━⬣
 ┃> *ID GAME:* ${data.data.customer_no}
 ┃> *PRODUK:* ${data.data.buyer_sku_code}
 ┃> *SN:* ${data.data.sn}
@@ -413,6 +416,127 @@ export default async function (sock, m) {
             }
           }
           break;
+        case 'digi2':
+          {
+            let order = '';
+            if (!isGroup) return reply('hanya group');
+            if (
+              who == '6289649178812@s.whatsapp.net' ||
+              who == '6281533852623@s.whatsapp.net' ||
+              who == '6285293001966@s.whatsapp.net' ||
+              who == '6285742736537@s.whatsapp.net'
+            ) {
+              let refId = makeid(7);
+              const apiUrl = 'https://api.digiflazz.com/v1/transaction';
+              const buyerSkuCode = m.args[0]; // Replace this with the product code
+              const customerNo = m.args[1]; // Replace this with the customer's phone number
+              order = buyerSkuCode;
+              // Calculate the signature using the specified formula: md5(username + apiKey + ref_id)
+              const signature = crypto
+                .createHash('md5')
+                .update(process.env.USERNAME_DIGI + process.env.APIKEY + refId)
+                .digest('hex');
+              console.log(signature);
+              // Prepare the request body for initiating the transaction
+              const makeRequestBody = {
+                commands: 'pay-pasca',
+                username: process.env.USERNAME_DIGI,
+                buyer_sku_code: buyerSkuCode,
+                customer_no: customerNo,
+                ref_id: refId,
+                sign: signature,
+              };
+              console.log(makeRequestBody);
+              reply(`*TUNGGU SEBENTAR YAK*`);
+              function checkTransactionStatus() {
+                // Make the POST request to initiate the transaction
+                fetch(apiUrl, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(makeRequestBody),
+                })
+                  .then((response) => response.json())
+                  .then((data) => {
+                    const status = data.data.status;
+                    console.log(data.data);
+
+                    if (status === 'Pending') {
+                      // Wait for a few seconds before checking the status again
+                      setTimeout(() => {
+                        checkTransactionStatus(); // Call the function again to check the status
+                      }, 5000);
+                    } else if (status === 'Gagal') {
+                      reply(`*Transaction failed.* ${data.data.message}`);
+                    } else {
+                      let balas = `
+┏━━ꕥ 「 DETAIL ORDERAN ${order.toUpperCase()}」 ꕥ━⬣
+┃> NO ID PLN: ${data.data.customer_no}
+┃> NAMA ${data.data.customer_name}
+┃> BIAYA ADMIN ${data.data.admin}
+┃> TARIF ${data.data.desc.tarif}
+┃> DAYA ${data.data.desc.daya}
+┃> LEMBAR TAGIHAN ${data.data.desc.lembar_tagihan}
+┃> PERIODE BULAN ${data.data.desc.detail[0].periode}
+┃> NILAI TAGIHAN ${data.data.desc.detail[0].nilai_tagihan}
+┃> DENDA ${data.data.desc.detail[0].denda}
+┃> METERAN AWAL ${data.data.desc.detail[0].meter_awal}
+┃> METERAN AKHIR ${data.data.desc.detail[0].meter_akhir}
+┃> STATUS: ${data.data.message}
+┃> Ref_Id: ${data.data.ref_id}
+┃> RC STATUS: ${data.data.rc}
+┗━━━━━━━━━━━━━━━━━━━ꕥ`;
+                      reply(balas);
+                    }
+                  })
+                  .catch((error) => {
+                    // Handle any errors that occur during the API request
+                    console.error('Error:', error);
+                    reply(
+                      'Gagal memproses permintaan, silakan coba lagi nanti.',
+                      +error,
+                    );
+                  });
+              }
+
+              // Call the function to initiate the API request and check the status
+              checkTransactionStatus();
+            } else {
+              let penyusub = m.key.participant.split('@')[0];
+              var kirimke = '6289649178812@s.whatsapp.net';
+              sock.sendMessage(kirimke, {
+                text: `penyusub ki ${penyusub}`,
+              });
+            }
+          }
+          break;
+        // case 'lop':
+        //   {
+        //     // for (var i = 0; i < 10; i++) {
+        //     function anu() {
+        //       if (!(iki = [])) {
+        //         setTimeout(() => {
+        //           // console.log(m);
+        //           reply('dshldjds slknkndks snld');
+        //           anu();
+        //           // console.log(iki);
+        //         }, 1000);
+        //         // }
+        //       } else {
+        //         setTimeout(() => {
+        //           // console.log(m.message.ephemeralMessage.message);
+        //           // console.log(m);
+        //           reply('zz  zz zzz');
+        //           anu();
+        //           // console.log(iki);
+        //         }, 1000);
+        //       }
+        //     }
+        //     anu();
+        //   }
+
+        //   break;
       }
     }
   } catch (error) {
