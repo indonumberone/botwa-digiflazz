@@ -146,6 +146,7 @@ export default async function (sock, m) {
                     console.error('Error:', error);
                     reply(
                       'Gagal memproses permintaan, silakan coba lagi nanti.',
+                      +error,
                     );
                   });
               }
