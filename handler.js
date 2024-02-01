@@ -135,7 +135,7 @@ export default async function (sock, m) {
                         checkTransactionStatus(); // Call the function again to check the status
                       }, 5000);
                     } else if (status === 'Gagal') {
-                      reply(`*Transaction failed.* ${data.data.message}`);
+                      reply(`*Transaction failed.* ${data.data.rc}`);
                     } else {
                       // If the status is not 'Pending' or 'Failed', set the reply
                       reply(balas);
