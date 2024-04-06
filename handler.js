@@ -550,7 +550,94 @@ export default async function (sock, m) {
           }
           break;
         case 'topup':
+        case 'tp':
           {
+            let order = '';
+            if (!isGroup) return reply('hanya group');
+            if (
+              who == process.env.OWNER1 ||
+              who == process.env.OWNER2 ||
+              who == process.env.OWNER3 ||
+              who == process.env.OWNER4
+            ) {
+              let refId = makeid(7);
+              const apiUrl = process.env.APIGAMES;
+              const buyerSkuCode = m.args[0]; // Replace this with the product code
+              const customerNo = m.args[1]; // Replace this with the customer's phone number
+              const serverID = m.args.length == 3 ? m.args[2] : '';
+              const merchant_id = process.env.MERCHANT_ID;
+              order = buyerSkuCode;
+              const signatureInput = `${merchant_id}:${process.env.SIGNATUREAPI}:${refId}`;
+              const signature = crypto
+                .createHash('md5')
+                .update(signatureInput)
+                .digest('hex');
+
+              const makeRequestBody = {
+                ref_id: refId,
+                merchant_id: merchant_id,
+                produk: buyerSkuCode,
+                tujuan: customerNo,
+                server_id: serverID,
+                signature: signature,
+              };
+              console.log(makeRequestBody);
+              reply(`*TUNGGU SEBENTAR YAK*`);
+              function checkTransactionStatus() {
+                // Make the POST request to initiate the transaction
+                fetch(apiUrl, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(makeRequestBody),
+                })
+                  .then((response) => response.json())
+                  .then((data) => {
+                    console.log(data);
+                    //                     const status = data.data.status;
+                    //                     let balas = `
+                    // ┏━━ꕥ *「 DETAIL ORDERAN ${order.toUpperCase()}」* ꕥ━⬣
+                    // ┃> *ID GAME:* ${data.data.customer_no}
+                    // ┃> *PRODUK:* ${data.data.buyer_sku_code}
+                    // ┃> *SN:* ${data.data.sn}
+                    // ┃> *STATUS:* ${data.data.message}
+                    // ┃> *Ref_Id:* ${data.data.ref_id}
+                    // ┃> *RC STATUS:* ${data.data.rc}
+                    // ┗━━━━━━━━━━━━━━━━━━━ꕥ`;
+
+                    // if (status === 'Pending') {
+                    //   // Wait for a few seconds before checking the status again
+                    //   setTimeout(() => {
+                    //     checkTransactionStatus(); // Call the function again to check the status
+                    //   }, 5000);
+                    // } else if (status === 'Gagal') {
+                    //   console.log(data.data);
+                    //   reply(`*Transaction failed.* ${data.data.message}`);
+                    // } else {
+                    //   // If the status is not 'Pending' or 'Failed', set the reply
+                    //   replyWIthInfo(balas);
+                    // }
+                  })
+                  .catch((error) => {
+                    // Handle any errors that occur during the API request
+                    console.error('Error:', error);
+                    reply(
+                      'Gagal memproses permintaan, silakan coba lagi nanti.',
+                      +error,
+                    );
+                  });
+              }
+
+              // Call the function to initiate the API request and check the status
+              checkTransactionStatus();
+            } else {
+              let penyusub = m.key.participant.split('@')[0];
+              var kirimke = '6289649178812@s.whatsapp.net';
+              sock.sendMessage(kirimke, {
+                text: `penyusub ki ${penyusub}`,
+              });
+            }
           }
           break;
       }
