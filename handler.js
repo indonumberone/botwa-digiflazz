@@ -4,13 +4,14 @@ import {makeid} from './lib/makeid.js';
 import dinero from 'dinero.js';
 import crypto from 'crypto';
 import fetch from 'node-fetch';
+import path from 'path';
 
 export default async function (sock, m) {
   const senderNumber = m.key.remoteJid;
   const groupMetadata = await sock.groupMetadata(senderNumber).catch((e) => {});
   const isGroup = senderNumber.endsWith('@g.us');
   let iki = m.args;
-  console.log(m);
+  // console.log(m);
   // console.log('sdjsd;', groupMetadata);
   // const body =
   //   message.message.conversation ||
@@ -58,8 +59,40 @@ export default async function (sock, m) {
     }
   }
 
+  const replyWIthInfo = async (text) => {
+    await sock.sendMessage(
+      senderNumber,
+      {
+        text: text,
+        contextInfo: {
+          forwardingScore: 555,
+          isForwarded: true,
+          externalAdReply: {
+            title: 'SELAMAT DATANG DI JAVAN SHOP ID\nSELAMAT BERBELANJA',
+            body: 'ingin bergabung jadi resseler?',
+            mediaType: 1,
+            description: 'topup',
+            previewType: 3,
+            thumbnailUrl: 'https://i.postimg.cc/J0sPnypG/image.jpg',
+            sourceUrl: 'https://wa.me/6289649178812',
+            containsAutoReply: false,
+            renderLargerThumbnail: true,
+            showAdAttribution: false,
+          },
+        },
+      },
+      {quoted: m},
+    );
+  };
+
   const reply = async (text) => {
-    await sock.sendMessage(senderNumber, {text}, {quoted: m});
+    await sock.sendMessage(
+      senderNumber,
+      {
+        text,
+      },
+      {quoted: m},
+    );
   };
 
   try {
@@ -71,23 +104,27 @@ export default async function (sock, m) {
       .split(/ +/)
       .shift()
       .toLowerCase();
-    m.args = body.trim().split(/ +/).slice(1);
+    m.args = body.replace(prefix, '').trim().split(/ +/).slice(1);
+    console.log(m.args);
     let q = m.args.join('');
     if (firstmess) {
       let who = m.key.participant;
       switch (pesan) {
+        case 'p':
+          reply('hallo');
+          break;
         case 'digi':
           {
             let order = '';
             if (!isGroup) return reply('hanya group');
             if (
-              who == '6289649178812@s.whatsapp.net' ||
-              who == '6281533852623@s.whatsapp.net' ||
-              who == '6285293001966@s.whatsapp.net' ||
-              who == '6285742736537@s.whatsapp.net'
+              who == process.env.OWNER1 ||
+              who == process.env.OWNER2 ||
+              who == process.env.OWNER3 ||
+              who == process.env.OWNER4
             ) {
               let refId = makeid(7);
-              const apiUrl = 'https://api.digiflazz.com/v1/transaction';
+              const apiUrl = process.env.APIDIGI;
               const buyerSkuCode = m.args[0]; // Replace this with the product code
               const customerNo = m.args[1]; // Replace this with the customer's phone number
               order = buyerSkuCode;
@@ -96,7 +133,6 @@ export default async function (sock, m) {
                 .createHash('md5')
                 .update(process.env.USERNAME_DIGI + process.env.APIKEY + refId)
                 .digest('hex');
-              console.log(signature);
               // Prepare the request body for initiating the transaction
               const makeRequestBody = {
                 username: process.env.USERNAME_DIGI,
@@ -135,10 +171,11 @@ export default async function (sock, m) {
                         checkTransactionStatus(); // Call the function again to check the status
                       }, 5000);
                     } else if (status === 'Gagal') {
-                      reply(`*Transaction failed.* ${data.data.rc}`);
+                      console.log(data.data);
+                      reply(`*Transaction failed.* ${data.data.message}`);
                     } else {
                       // If the status is not 'Pending' or 'Failed', set the reply
-                      reply(balas);
+                      replyWIthInfo(balas);
                     }
                   })
                   .catch((error) => {
@@ -512,32 +549,10 @@ export default async function (sock, m) {
             }
           }
           break;
-        // case 'lop':
-        //   {
-        //     // for (var i = 0; i < 10; i++) {
-        //     function anu() {
-        //       if (!(iki = [])) {
-        //         setTimeout(() => {
-        //           // console.log(m);
-        //           reply('dshldjds slknkndks snld');
-        //           anu();
-        //           // console.log(iki);
-        //         }, 1000);
-        //         // }
-        //       } else {
-        //         setTimeout(() => {
-        //           // console.log(m.message.ephemeralMessage.message);
-        //           // console.log(m);
-        //           reply('zz  zz zzz');
-        //           anu();
-        //           // console.log(iki);
-        //         }, 1000);
-        //       }
-        //     }
-        //     anu();
-        //   }
-
-        //   break;
+        case 'topup':
+          {
+          }
+          break;
       }
     }
   } catch (error) {
