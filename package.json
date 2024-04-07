@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@whiskeysockets/baileys": "^6.4.1",
+    "axios": "^1.6.8",
     "dinero.js": "^1.9.1",
     "dotenv": "^16.3.1",
     "lowdb": "^6.1.1",
@@ -20,6 +21,7 @@
     "node-fetch": "^3.3.2",
     "nodemon": "^3.0.2",
     "phin": "^3.7.0",
+    "speakeasy": "^2.0.0",
     "wa-sticker-formatter": "^4.4.4"
   }
 }

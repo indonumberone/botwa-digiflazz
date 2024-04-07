@@ -4,6 +4,7 @@ import {makeid} from './lib/makeid.js';
 import dinero from 'dinero.js';
 import crypto from 'crypto';
 import fetch from 'node-fetch';
+import axios from 'axios';
 import path from 'path';
 
 export default async function (sock, m) {
@@ -106,12 +107,12 @@ export default async function (sock, m) {
       .toLowerCase();
     m.args = body.replace(prefix, '').trim().split(/ +/).slice(1);
     console.log(m.args);
-    let q = m.args.join('');
+    let q = m.args.join(' ');
     if (firstmess) {
       let who = m.key.participant;
       switch (pesan) {
         case 'p':
-          reply('hallo');
+          replyWIthInfo(q);
           break;
         case 'digi':
           {
@@ -459,10 +460,10 @@ export default async function (sock, m) {
             let order = '';
             if (!isGroup) return reply('hanya group');
             if (
-              who == '6289649178812@s.whatsapp.net' ||
-              who == '6281533852623@s.whatsapp.net' ||
-              who == '6285293001966@s.whatsapp.net' ||
-              who == '6285742736537@s.whatsapp.net'
+              who == process.env.OWNER1 ||
+              who == process.env.OWNER2 ||
+              who == process.env.OWNER3 ||
+              who == process.env.OWNER4
             ) {
               let refId = makeid(7);
               const apiUrl = 'https://api.digiflazz.com/v1/transaction';
@@ -549,6 +550,11 @@ export default async function (sock, m) {
             }
           }
           break;
+        case 'setkios':
+          process.env.KIOSGAMER = m.args[0];
+
+          // console.log(process.env.KIOSGAMER);
+          break;
         case 'topup':
         case 'tp':
           {
@@ -583,50 +589,49 @@ export default async function (sock, m) {
               };
               console.log(makeRequestBody);
               reply(`*TUNGGU SEBENTAR YAK*`);
-              function checkTransactionStatus() {
+              async function checkTransactionStatus() {
                 // Make the POST request to initiate the transaction
-                fetch(apiUrl, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify(makeRequestBody),
-                })
-                  .then((response) => response.json())
-                  .then((data) => {
-                    console.log(data);
-                    //                     const status = data.data.status;
-                    //                     let balas = `
-                    // ┏━━ꕥ *「 DETAIL ORDERAN ${order.toUpperCase()}」* ꕥ━⬣
-                    // ┃> *ID GAME:* ${data.data.customer_no}
-                    // ┃> *PRODUK:* ${data.data.buyer_sku_code}
-                    // ┃> *SN:* ${data.data.sn}
-                    // ┃> *STATUS:* ${data.data.message}
-                    // ┃> *Ref_Id:* ${data.data.ref_id}
-                    // ┃> *RC STATUS:* ${data.data.rc}
-                    // ┗━━━━━━━━━━━━━━━━━━━ꕥ`;
-
-                    // if (status === 'Pending') {
-                    //   // Wait for a few seconds before checking the status again
-                    //   setTimeout(() => {
-                    //     checkTransactionStatus(); // Call the function again to check the status
-                    //   }, 5000);
-                    // } else if (status === 'Gagal') {
-                    //   console.log(data.data);
-                    //   reply(`*Transaction failed.* ${data.data.message}`);
-                    // } else {
-                    //   // If the status is not 'Pending' or 'Failed', set the reply
-                    //   replyWIthInfo(balas);
-                    // }
-                  })
-                  .catch((error) => {
-                    // Handle any errors that occur during the API request
-                    console.error('Error:', error);
+                try {
+                  const response = await axios.post(
+                    apiUrl,
+                    JSON.stringify(makeRequestBody),
+                  );
+                  console.log(response.data);
+                  const status =
+                    response.data.data.status == true
+                      ? response.data.data.status
+                      : response.data.status;
+                  console.log(status);
+                  //                   const balas = `
+                  // ┏━━ꕥ *「 DETAIL ORDERAN ${order.toUpperCase()}」* ꕥ━⬣
+                  // ┃> *ID GAME:* ${response.data.destination}
+                  // ┃> *PRODUK:* ${response.data.product_code}
+                  // ┃> *SN:* ${response.data.sn}
+                  // ┃> *STATUS:* ${response.data.message}
+                  // ┃> *Ref_Id:* ${response.data.sdfsdx2}
+                  // ┃> *Trx_Id:* ${response.data.sdfsdx2}
+                  // ┃> *RC STATUS:* ${response.data.rc}
+                  // ┗━━━━━━━━━━━━━━━━━━━ꕥ`;
+                  if (status === 'Pending') {
+                    // Wait for a few seconds before checking the status again
+                    setTimeout(() => {
+                      checkTransactionStatus(); // Call the function again to check the status
+                    }, 5000);
+                  } else if (status == 0) {
+                    // If the status is not 'Pending' or 'Failed', set the reply
                     reply(
-                      'Gagal memproses permintaan, silakan coba lagi nanti.',
-                      +error,
+                      'Gagal memproses permintaan, silakan coba lagi nanti.' +
+                        response.data.error_msg,
                     );
-                  });
+                  }
+                } catch (error) {
+                  // Handle any errors that occur during the API request
+                  console.error('Error:', error);
+                  reply(
+                    'kjjkj Gagal memproses permintaan, silakan coba lagi nanti.',
+                    +error,
+                  );
+                }
               }
 
               // Call the function to initiate the API request and check the status
