@@ -66,7 +66,7 @@ export let testResponses = {};
 // app.post('/test', (req, res) => {
 //   let data = req.body;
 // });
-app.listen(3000, () => {
+app.listen(3030, () => {
   console.log('express berjalan');
 });
 // run in main file
