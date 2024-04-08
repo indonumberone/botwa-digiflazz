@@ -5,30 +5,15 @@ import dinero from 'dinero.js';
 import crypto from 'crypto';
 import fetch from 'node-fetch';
 import axios from 'axios';
-import path from 'path';
-
-export default async function (sock, m) {
+import {app} from './index.js';
+import {testResponses} from './index.js';
+export default async function handler(sock, m) {
   const senderNumber = m.key.remoteJid;
   const groupMetadata = await sock.groupMetadata(senderNumber).catch((e) => {});
   const isGroup = senderNumber.endsWith('@g.us');
-  let iki = m.args;
-  // console.log(m);
-  // console.log('sdjsd;', groupMetadata);
-  // const body =
-  //   message.message.conversation ||
-  //   (message.message.extendedTextMessage &&
-  //     message.message.extendedTextMessage.text) ||
-  //   (message.imageMessage && message.imageMessage.caption) ||
-  //   (message.videoMessage && message.videoMessage.caption);
 
   if (m.message) {
     m.mtype = getContentType(m.message);
-
-    // console.log(m);
-    // console.log('tewstttsdttd ini yang anuu');
-    // m.mtype.imageMessage
-    //   ? console.log("ini conversation")
-    //   : console.log("ini nganuuu", m.message.extendedTextMessage.quotedMessage);
 
     try {
       var body =
@@ -95,7 +80,22 @@ export default async function (sock, m) {
       {quoted: m},
     );
   };
+  app.post('/test', async (req, res) => {
+    let data = req.body;
+    console.log(data);
+    const balas = `
+┏━━ꕥ *「 DETAIL ORDERAN }」* ꕥ━⬣
+┃> *ID GAME:* ${data.data.customer_no}
+┃> *PRODUK:* ${data.data.buyer_sku_code}
+┃> *SN:* ${data.data.sn}
+┃> *STATUS:* ${data.data.message}
+┃> *Ref_Id:* ${data.data.ref_id}
+┃> *RC STATUS:* ${data.data.rc}
+┗━━━━━━━━━━━━━━━━━━━ꕥ`;
+    await sock.sendMessage(process.env.OWNER1, {text: balas}, {quoted: m});
 
+    res.status(200).send();
+  });
   try {
     let prefix = /^[\\/!#.]/gi.test(body) ? body.match(/^[\\/!#.]/gi) : '/';
     const firstmess = body.startsWith(prefix);
@@ -108,11 +108,79 @@ export default async function (sock, m) {
     m.args = body.replace(prefix, '').trim().split(/ +/).slice(1);
     console.log(m.args);
     let q = m.args.join(' ');
+
     if (firstmess) {
       let who = m.key.participant;
       switch (pesan) {
+        case 'q':
+          {
+            console.log(testResponses);
+          }
+          break;
         case 'p':
-          replyWIthInfo(q);
+          {
+            let order = '';
+            let refId = makeid(7);
+            const apiUrl = process.env.APIDIGI;
+            const buyerSkuCode = m.args[0];
+            const customerNo = m.args[1];
+            order = buyerSkuCode;
+
+            const signature = crypto
+              .createHash('md5')
+              .update(process.env.USERNAME_DIGI + process.env.APIKEY + refId)
+              .digest('hex');
+
+            const makeRequestBody = {
+              username: process.env.USERNAME_DIGI,
+              buyer_sku_code: buyerSkuCode,
+              customer_no: customerNo,
+              ref_id: refId,
+              sign: signature,
+            };
+            console.log(makeRequestBody);
+            try {
+              const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(makeRequestBody),
+              });
+
+              //               const cek_response = await new Promise((resolve) => {
+              //                 app.post('/test', (req, res) => {
+              //                   const data = req.body;
+              //                   const interval = setInterval(() => {
+              //                     if (data.data.status == 'Gagal') {
+              //                       res.status(200).send();
+              //                       return resolve(data);
+              //                     } else if (data.data.status == 'Sukses') {
+              //                       res.status(200).send();
+              //                       return resolve(data);
+              //                     }
+              //                     console.log(data);
+              //                   }, 5000);
+              //                 });
+              //               });
+              //               const balas = `
+              // ┏━━ꕥ *「 DETAIL ORDERAN ${order.toUpperCase()}」* ꕥ━⬣
+              // ┃> *ID GAME:* ${cek_response.data.customer_no}
+              // ┃> *PRODUK:* ${cek_response.data.buyer_sku_code}
+              // ┃> *SN:* ${cek_response.data.sn}
+              // ┃> *STATUS:* ${cek_response.data.message}
+              // ┃> *Ref_Id:* ${cek_response.data.ref_id}
+              // ┃> *RC STATUS:* ${cek_response.data.rc}
+              // ┗━━━━━━━━━━━━━━━━━━━ꕥ`;
+              //               reply(balas);
+            } catch (error) {
+              console.error('Error:', error);
+
+              await sock.sendMessage(senderNumber, {
+                text: 'Transaksi gagal dilakukan. Mohon coba lagi nanti.',
+              });
+            }
+          }
           break;
         case 'digi':
           {

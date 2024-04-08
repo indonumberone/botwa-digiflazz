@@ -14,8 +14,10 @@
   "dependencies": {
     "@whiskeysockets/baileys": "^6.4.1",
     "axios": "^1.6.8",
+    "body-parser": "^1.20.2",
     "dinero.js": "^1.9.1",
     "dotenv": "^16.3.1",
+    "express": "^4.19.2",
     "lowdb": "^6.1.1",
     "moment-timezone": "^0.5.43",
     "node-fetch": "^3.3.2",
