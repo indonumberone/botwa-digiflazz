@@ -152,7 +152,7 @@ export default async function handler(sock, m) {
               //                 app.post('/test', (req, res) => {
               //                   const data = req.body;
               //                   const interval = setInterval(() => {
-              //                     if (data.data.status == 'Gagal') {
+              //                     if (data.status == 'Gagal') {
               //                       res.status(200).send();
               //                       return resolve(data);
               //                     } else if (data.data.status == 'Sukses') {
@@ -634,76 +634,116 @@ export default async function handler(sock, m) {
               who == process.env.OWNER3 ||
               who == process.env.OWNER4
             ) {
+              let retries = 0;
+              const maxRetries = 36;
               let refId = makeid(7);
-              const apiUrl = process.env.APIGAMES;
-              const buyerSkuCode = m.args[0]; // Replace this with the product code
-              const customerNo = m.args[1]; // Replace this with the customer's phone number
-              const serverID = m.args.length == 3 ? m.args[2] : '';
               const merchant_id = process.env.MERCHANT_ID;
-              order = buyerSkuCode;
+
               const signatureInput = `${merchant_id}:${process.env.SIGNATUREAPI}:${refId}`;
               const signature = crypto
                 .createHash('md5')
                 .update(signatureInput)
                 .digest('hex');
-
-              const makeRequestBody = {
-                ref_id: refId,
-                merchant_id: merchant_id,
-                produk: buyerSkuCode,
-                tujuan: customerNo,
-                server_id: serverID,
-                signature: signature,
-              };
-              console.log(makeRequestBody);
-              reply(`*TUNGGU SEBENTAR YAK*`);
-              async function checkTransactionStatus() {
-                // Make the POST request to initiate the transaction
+              const kode_produk = m.args[0];
+              const id = m.args[1];
+              const server = m.args[2] == true ? m.args[2] : '';
+              async function lesgo() {
                 try {
-                  const response = await axios.post(
-                    apiUrl,
-                    JSON.stringify(makeRequestBody),
+                  const data = await axios.get(
+                    `https://v1.apigames.id/v2/transaksi?ref_id=${refId}&merchant_id=${process.env.MERCHANT_ID}&produk=${kode_produk}&tujuan=${id}&signature=${signature}&server_id=${server}`,
                   );
-                  console.log(response.data);
-                  const status =
-                    response.data.data.status == true
-                      ? response.data.data.status
-                      : response.data.status;
-                  console.log(status);
-                  //                   const balas = `
-                  // ┏━━ꕥ *「 DETAIL ORDERAN ${order.toUpperCase()}」* ꕥ━⬣
-                  // ┃> *ID GAME:* ${response.data.destination}
-                  // ┃> *PRODUK:* ${response.data.product_code}
-                  // ┃> *SN:* ${response.data.sn}
-                  // ┃> *STATUS:* ${response.data.message}
-                  // ┃> *Ref_Id:* ${response.data.sdfsdx2}
-                  // ┃> *Trx_Id:* ${response.data.sdfsdx2}
-                  // ┃> *RC STATUS:* ${response.data.rc}
-                  // ┗━━━━━━━━━━━━━━━━━━━ꕥ`;
-                  if (status === 'Pending') {
-                    // Wait for a few seconds before checking the status again
-                    setTimeout(() => {
-                      checkTransactionStatus(); // Call the function again to check the status
-                    }, 5000);
-                  } else if (status == 0) {
-                    // If the status is not 'Pending' or 'Failed', set the reply
-                    reply(
-                      'Gagal memproses permintaan, silakan coba lagi nanti.' +
-                        response.data.error_msg,
-                    );
+
+                  console.log(data.data);
+                  // console.log(data.data.status);
+                  if (data.data.data.status === 'Sukses') {
+                    const balas = `
+┏━━ꕥ *「 DETAIL ORDERAN ${kode_produk.toUpperCase()}」* ꕥ━⬣
+┃> *ID GAME:* ${data.data.data.destination}
+┃> *PRODUK:* ${data.data.data.product_code}
+┃> *SN:* ${data.data.data.sn}
+┃> *STATUS:* ${data.data.data.status}
+┃> *Ref_Id:* ${data.data.data.ref_id}
+┗━━━━━━━━━━━━━━━━━━━ꕥ`;
+                    replyWIthInfo(balas);
+                  } else if (data.data.data.status == 'Pending') {
+                    if (retries < maxRetries) {
+                      retries++;
+                      await new Promise((resolve) => setTimeout(resolve, 5000));
+                      lesgo();
+                    } else {
+                      setReply('Bentar status masih pending harap tunggu');
+                      lesgo();
+                    }
+                  } else {
+                    reply(`ERROR!!!!! \n ${data.data.data.message}`);
                   }
-                } catch (error) {
-                  // Handle any errors that occur during the API request
-                  console.error('Error:', error);
-                  reply(
-                    'kjjkj Gagal memproses permintaan, silakan coba lagi nanti.',
-                    +error,
-                  );
+                  // const apiUrl = process.env.APIGAMES;
+                  // const buyerSkuCode = m.args[0]; // Replace this with the product code
+                  // const customerNo = m.args[1]; // Replace this with the customer's phone number
+                  // const serverID = m.args.length == 3 ? m.args[2] : '';
+
+                  // const makeRequestBody = {
+                  //   ref_id: refId,
+                  //   merchant_id: merchant_id,
+                  //   produk: buyerSkuCode,
+                  //   tujuan: customerNo,
+                  //   server_id: serverID,
+                  //   signature: signature,
+                  // };
+                  // console.log(makeRequestBody);
+                  // reply(`*TUNGGU SEBENTAR YAK*`);
+                  // async function checkTransactionStatus() {
+                  //   // Make the POST request to initiate the transaction
+                  //   try {
+                  //     const response = await axios.post(
+                  //       apiUrl,
+                  //       JSON.stringify(makeRequestBody),
+                  //     );
+                  //     console.log(response.data);
+                  //     const status =
+                  //       response.data.data.status == true
+                  //         ? response.data.data.status
+                  //         : response.data.status;
+                  //     console.log(status);
+                  //     //                   const balas = `
+                  //     // ┏━━ꕥ *「 DETAIL ORDERAN ${order.toUpperCase()}」* ꕥ━⬣
+                  //     // ┃> *ID GAME:* ${response.data.destination}
+                  //     // ┃> *PRODUK:* ${response.data.product_code}
+                  //     // ┃> *SN:* ${response.data.sn}
+                  //     // ┃> *STATUS:* ${response.data.message}
+                  //     // ┃> *Ref_Id:* ${response.data.sdfsdx2}
+                  //     // ┃> *Trx_Id:* ${response.data.sdfsdx2}
+                  //     // ┃> *RC STATUS:* ${response.data.rc}
+                  //     // ┗━━━━━━━━━━━━━━━━━━━ꕥ`;
+                  //     if (status === 'Pending') {
+                  //       // Wait for a few seconds before checking the status again
+                  //       setTimeout(() => {
+                  //         checkTransactionStatus(); // Call the function again to check the status
+                  //       }, 5000);
+                  //     } else if (status == 0) {
+                  //       // If the status is not 'Pending' or 'Failed', set the reply
+                  //       reply(
+                  //         'Gagal memproses permintaan, silakan coba lagi nanti.' +
+                  //           response.data.error_msg,
+                  //       );
+                  //     }
+                  //   } catch (error) {
+                  //     // Handle any errors that occur during the API request
+                  //     console.error('Error:', error);
+                  //     reply(
+                  //       'kjjkj Gagal memproses permintaan, silakan coba lagi nanti.',
+                  //       +error,
+                  //     );
+                  //   }
+                  // }
+
+                  // // Call the function to initiate the API request and check the status
+                  // checkTransactionStatus();
+                } catch (err) {
+                  console.log(err);
                 }
               }
-
-              // Call the function to initiate the API request and check the status
-              checkTransactionStatus();
+              lesgo();
             } else {
               let penyusub = m.key.participant.split('@')[0];
               var kirimke = '6289649178812@s.whatsapp.net';
