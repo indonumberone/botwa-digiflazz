@@ -647,6 +647,7 @@ export default async function handler(sock, m) {
               const kode_produk = m.args[0];
               const id = m.args[1];
               const server = m.args[2] == true ? m.args[2] : '';
+              reply(`*TUNGGU SEBENTAR YAK*`);
               async function lesgo() {
                 try {
                   const data = await axios.get(
