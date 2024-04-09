@@ -676,7 +676,11 @@ export default async function handler(sock, m) {
                       lesgo();
                     }
                   } else {
-                    reply(`ERROR!!!!! \n ${data.data.error_msg}`);
+                    let error =
+                      data.data.error_msg == true
+                        ? data.data.error_msg
+                        : data.data.data.message;
+                    reply(`ERROR!!!!! \n ${error}`);
                   }
                   // const apiUrl = process.env.APIGAMES;
                   // const buyerSkuCode = m.args[0]; // Replace this with the product code
