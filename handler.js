@@ -104,8 +104,9 @@ export default async function handler(sock, m) {
           break;
         case 'digi':
           {
-            if (m.args.length < 0) {
-              return reply('.digi kodeproduk nosku');
+            console.log(m.args.length);
+            if (m.args.length <= 0) {
+              return reply('contoh .digi kode_produk no_buyer_sku');
             }
             let order = '';
             let refId = makeid(7);
