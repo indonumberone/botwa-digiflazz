@@ -104,6 +104,9 @@ export default async function handler(sock, m) {
           break;
         case 'digi':
           {
+            if (m.args.length < 0) {
+              return reply('.digi kodeproduk nosku');
+            }
             let order = '';
             let refId = makeid(7);
             const apiUrl = process.env.APIDIGI;
