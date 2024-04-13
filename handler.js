@@ -164,7 +164,7 @@ export default async function handler(sock, m) {
             console.log(makeRequestBody);
             try {
               const response = await axios.post(apiUrl, makeRequestBody);
-              // console.log(response);
+              console.log(response.data);
 
               if (response.data.data.status == 'Pending') {
                 cekPending(refId);
