@@ -163,8 +163,13 @@ export default async function handler(sock, m) {
             };
             console.log(makeRequestBody);
             try {
-              const response = await axios.post(apiUrl, makeRequestBody);
-              console.log(response.data);
+              const response = await axios.post(apiUrl, makeRequestBody, {
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+              });
+
+              console.log(response.data.data);
 
               if (response.data.data.status == 'Pending') {
                 cekPending(refId);
@@ -173,100 +178,17 @@ export default async function handler(sock, m) {
                 return replyWIthInfo(replyMessage);
               }
             } catch (error) {
-              console.error('Error:', error);
+              console.error('Error:', error.response.data.data.message);
 
               await sock.sendMessage(senderNumber, {
-                text: 'Transaksi gagal dilakukan. Mohon coba lagi nanti.',
+                text:
+                  'Transaksi gagal dilakukan. Mohon coba lagi nanti.\n' +
+                  error.response.data.data.message,
               });
             }
           }
           break;
-        // case 'digi':
-        //           {
-        //             let order = '';
-        //             if (!isGroup) return reply('hanya group');
-        //             if (
-        //               who == process.env.OWNER1 ||
-        //               who == process.env.OWNER2 ||
-        //               who == process.env.OWNER3 ||
-        //               who == process.env.OWNER4
-        //             ) {
-        //               let refId = makeid(7);
-        //               const apiUrl = process.env.APIDIGI;
-        //               const buyerSkuCode = m.args[0]; // Replace this with the product code
-        //               const customerNo = m.args[1]; // Replace this with the customer's phone number
-        //               order = buyerSkuCode;
-        //               // Calculate the signature using the specified formula: md5(username + apiKey + ref_id)
-        //               const signature = crypto
-        //                 .createHash('md5')
-        //                 .update(process.env.USERNAME_DIGI + process.env.APIKEY + refId)
-        //                 .digest('hex');
-        //               // Prepare the request body for initiating the transaction
-        //               const makeRequestBody = {
-        //                 username: process.env.USERNAME_DIGI,
-        //                 buyer_sku_code: buyerSkuCode,
-        //                 customer_no: customerNo,
-        //                 ref_id: refId,
-        //                 sign: signature,
-        //               };
-        //               console.log(makeRequestBody);
-        //               reply(`*TUNGGU SEBENTAR YAK*`);
-        //               function checkTransactionStatus() {
-        //                 // Make the POST request to initiate the transaction
-        //                 fetch(apiUrl, {
-        //                   method: 'POST',
-        //                   headers: {
-        //                     'Content-Type': 'application/json',
-        //                   },
-        //                   body: JSON.stringify(makeRequestBody),
-        //                 })
-        //                   .then((response) => response.json())
-        //                   .then((data) => {
-        //                     const status = data.data.status;
-        //                     let balas = `
-        // ┏━━ꕥ *「 DETAIL ORDERAN ${order.toUpperCase()}」* ꕥ━⬣
-        // ┃> *ID GAME:* ${data.data.customer_no}
-        // ┃> *PRODUK:* ${data.data.buyer_sku_code}
-        // ┃> *SN:* ${data.data.sn}
-        // ┃> *STATUS:* ${data.data.message}
-        // ┃> *Ref_Id:* ${data.data.ref_id}
-        // ┃> *RC STATUS:* ${data.data.rc}
-        // ┗━━━━━━━━━━━━━━━━━━━ꕥ`;
 
-        //                     if (status === 'Pending') {
-        //                       // Wait for a few seconds before checking the status again
-        //                       setTimeout(() => {
-        //                         checkTransactionStatus(); // Call the function again to check the status
-        //                       }, 5000);
-        //                     } else if (status === 'Gagal') {
-        //                       console.log(data.data);
-        //                       reply(`*Transaction failed.* ${data.data.message}`);
-        //                     } else {
-        //                       // If the status is not 'Pending' or 'Failed', set the reply
-        //                       replyWIthInfo(balas);
-        //                     }
-        //                   })
-        //                   .catch((error) => {
-        //                     // Handle any errors that occur during the API request
-        //                     console.error('Error:', error);
-        //                     reply(
-        //                       'Gagal memproses permintaan, silakan coba lagi nanti.',
-        //                       +error,
-        //                     );
-        //                   });
-        //               }
-
-        //               // Call the function to initiate the API request and check the status
-        //               checkTransactionStatus();
-        //             } else {
-        //               let penyusub = m.key.participant.split('@')[0];
-        //               var kirimke = '6289649178812@s.whatsapp.net';
-        //               sock.sendMessage(kirimke, {
-        //                 text: `penyusub ki ${penyusub}`,
-        //               });
-        //             }
-        //           }
-        //           break;
         case 'saldo':
           {
             if (!isGroup) return reply('hanya group');

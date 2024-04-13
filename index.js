@@ -60,7 +60,7 @@ app.get('/', (req, res) => {
   res.status(200).send('Hello World!');
 });
 app.post('/webhook', (req, res) => {
-  // console.log(req);
+  console.log(req.body);
   const refid = req.body.data.ref_id;
   testResponses[refid] = req.body;
   // console.log(testResponses[refid]);
