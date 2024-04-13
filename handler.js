@@ -142,7 +142,7 @@ export default async function handler(sock, m) {
                 } else if (cekData.data.data) {
                   const replyMessage = await responseReply(cekData.data.data);
                   console.log(replyMessage);
-                  return reply(replyMessage);
+                  return replyWIthInfo(replyMessage);
                 }
               } catch (error) {
                 console.error('Error fetching data:', error);
@@ -170,7 +170,7 @@ export default async function handler(sock, m) {
                 cekPending(refId);
               } else {
                 const replyMessage = await responseReply(response.data.data);
-                return reply(replyMessage);
+                return replyWIthInfo(replyMessage);
               }
             } catch (error) {
               console.error('Error:', error);
