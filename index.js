@@ -51,23 +51,37 @@ async function connectToWhatsApp() {
   });
 }
 export const app = express();
-const port = 3000;
-
-// export const pendingTransactions = new Map();
+export const port = 3030;
+export let testResponses = {};
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.get('/', (req, res) => {
   res.status(200).send('Hello World!');
 });
+app.post('/webhook', (req, res) => {
+  // console.log(req);
+  const refid = req.body.data.ref_id;
+  testResponses[refid] = req.body;
+  // console.log(testResponses[refid]);
+  res.status(200).send('rcti ok');
+});
+app.get('/test', (req, res) => {
+  const refid = req.query.refid;
+  if (!refid) {
+    return res.status(400).send({
+      status: 'failed',
+      error_msg: 'query salah',
+    });
+  }
+  const data = testResponses[refid];
+  res.status(200).send(data);
+});
 
-app.get('/kirim', (req, res) => {});
-export let testResponses = {};
-// app.post('/test', (req, res) => {
-//   let data = req.body;
-// });
-app.listen(3030, () => {
+// app.get('/kirim', (req, res) => {});
+
+app.listen(port, () => {
   console.log('express berjalan');
 });
-// run in main file
+
 connectToWhatsApp();

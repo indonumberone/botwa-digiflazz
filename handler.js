@@ -80,22 +80,22 @@ export default async function handler(sock, m) {
       {quoted: m},
     );
   };
-  app.post('/test', async (req, res) => {
-    let data = req.body;
-    console.log(data);
-    const balas = `
-┏━━ꕥ *「 DETAIL ORDERAN }」* ꕥ━⬣
-┃> *ID GAME:* ${data.data.customer_no}
-┃> *PRODUK:* ${data.data.buyer_sku_code}
-┃> *SN:* ${data.data.sn}
-┃> *STATUS:* ${data.data.message}
-┃> *Ref_Id:* ${data.data.ref_id}
-┃> *RC STATUS:* ${data.data.rc}
-┗━━━━━━━━━━━━━━━━━━━ꕥ`;
-    await sock.sendMessage(process.env.OWNER1, {text: balas}, {quoted: m});
+  //   app.post('/test', async (req, res) => {
+  //     let data = req.body;
+  //     console.log(data);
+  //     const balas = `
+  // ┏━━ꕥ *「 DETAIL ORDERAN }」* ꕥ━⬣
+  // ┃> *ID GAME:* ${data.data.customer_no}
+  // ┃> *PRODUK:* ${data.data.buyer_sku_code}
+  // ┃> *SN:* ${data.data.sn}
+  // ┃> *STATUS:* ${data.data.message}
+  // ┃> *Ref_Id:* ${data.data.ref_id}
+  // ┃> *RC STATUS:* ${data.data.rc}
+  // ┗━━━━━━━━━━━━━━━━━━━ꕥ`;
+  //     await sock.sendMessage(process.env.OWNER1, {text: balas}, {quoted: m});
 
-    res.status(200).send();
-  });
+  //     res.status(200).send();
+  //   });
   try {
     let prefix = /^[\\/!#.]/gi.test(body) ? body.match(/^[\\/!#.]/gi) : '/';
     const firstmess = body.startsWith(prefix);
@@ -125,6 +125,17 @@ export default async function handler(sock, m) {
             const buyerSkuCode = m.args[0];
             const customerNo = m.args[1];
             order = buyerSkuCode;
+            async function cekPending(refId) {
+              const data = await axios.get(
+                'http://localhost:3030/test?refid=' + refId,
+              );
+              console.log(refId);
+              if (!data.data) {
+                await new Promise((resolve) => setTimeout(resolve, 5000));
+                cekPending(refId);
+              }
+              console.log(data.data);
+            }
 
             const signature = crypto
               .createHash('md5')
@@ -140,39 +151,34 @@ export default async function handler(sock, m) {
             };
             console.log(makeRequestBody);
             try {
-              const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(makeRequestBody),
-              });
+              const response = await axios.post(apiUrl, makeRequestBody);
+              console.log(response);
+              const {
+                customer_no,
+                buyer_sku_code,
+                sn,
+                message,
+                status,
+                ref_id,
+                rc,
+              } = response.data.data;
+              console.log(status);
+              if (status == 'Pending') {
+                cekPending(refId);
+              } else {
+                const balas = `
+┏━━ꕥ *「 DETAIL ORDERAN ${order.toUpperCase()}」* ꕥ━⬣
+┃> *ID GAME:* ${customer_no}
+┃> *PRODUK:* ${buyer_sku_code}
+┃> *SN:* ${sn}
+┃> *STATUS:* ${message}
+┃> *Ref_Id:* ${ref_id}
+┃> *RC STATUS:* ${rc}
+┗━━━━━━━━━━━━━━━━━━━ꕥ`;
+                console.log(balas);
+              }
 
-              //               const cek_response = await new Promise((resolve) => {
-              //                 app.post('/test', (req, res) => {
-              //                   const data = req.body;
-              //                   const interval = setInterval(() => {
-              //                     if (data.status == 'Gagal') {
-              //                       res.status(200).send();
-              //                       return resolve(data);
-              //                     } else if (data.data.status == 'Sukses') {
-              //                       res.status(200).send();
-              //                       return resolve(data);
-              //                     }
-              //                     console.log(data);
-              //                   }, 5000);
-              //                 });
-              //               });
-              //               const balas = `
-              // ┏━━ꕥ *「 DETAIL ORDERAN ${order.toUpperCase()}」* ꕥ━⬣
-              // ┃> *ID GAME:* ${cek_response.data.customer_no}
-              // ┃> *PRODUK:* ${cek_response.data.buyer_sku_code}
-              // ┃> *SN:* ${cek_response.data.sn}
-              // ┃> *STATUS:* ${cek_response.data.message}
-              // ┃> *Ref_Id:* ${cek_response.data.ref_id}
-              // ┃> *RC STATUS:* ${cek_response.data.rc}
-              // ┗━━━━━━━━━━━━━━━━━━━ꕥ`;
-              //               reply(balas);
+              reply(balas);
             } catch (error) {
               console.error('Error:', error);
 
