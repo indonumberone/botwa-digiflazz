@@ -96,6 +96,11 @@ export default async function handler(sock, m) {
 
     if (firstmess) {
       let who = m.key.participant;
+      const checking =
+        who == process.env.OWNER1 ||
+        who == process.env.OWNER2 ||
+        who == process.env.OWNER3 ||
+        who == process.env.OWNER4;
       switch (pesan) {
         case 'q':
           {
@@ -103,6 +108,8 @@ export default async function handler(sock, m) {
           }
           break;
         case 'digi':
+          if (!checking) return reply('ONLY OWNER');
+          if (!isGroup) return reply('ONLY GROUP');
           {
             console.log(m.args.length);
             if (m.args.length <= 0) {
@@ -193,9 +200,10 @@ export default async function handler(sock, m) {
           {
             if (!isGroup) return reply('hanya group');
             if (
-              who == '6289649178812@s.whatsapp.net' ||
-              who == '6285293001966@s.whatsapp.net' ||
-              who == '6285742736537@s.whatsapp.net'
+              who == process.env.OWNER1 ||
+              who == process.env.OWNER2 ||
+              who == process.env.OWNER3 ||
+              who == process.env.OWNER4
             ) {
               const apiUrl = 'https://api.digiflazz.com/v1/cek-saldo';
               const signature = crypto
