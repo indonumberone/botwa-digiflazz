@@ -169,6 +169,7 @@ export default async function handler(sock, m) {
               sign: signature,
             };
             console.log(makeRequestBody);
+            reply('Transaksi dengan refid' + refId + 'sedang di proses');
             try {
               const response = await axios.post(apiUrl, makeRequestBody, {
                 headers: {
