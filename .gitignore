@@ -1,6 +1,8 @@
 node_modules/
-login/
+src/login/
+test/
 p.js
 tes.js
 test.js
 .env
+spreadsheet.json
