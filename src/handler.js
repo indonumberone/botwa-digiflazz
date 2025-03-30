@@ -74,6 +74,7 @@ export default async function handler(sock, m) {
             console.log(testResponses);
           }
           break;
+        case "buy":
         case "digi":
           if (!OWNER_NUMBER.includes(who)) {
             await reply(
@@ -110,6 +111,7 @@ export default async function handler(sock, m) {
             await replyWIthInfo(sock, m, responseMessage);
           }
           break;
+
         case "deposit":
           {
             if (!OWNER_NUMBER.includes(who)) {
@@ -140,6 +142,7 @@ export default async function handler(sock, m) {
             console.log(results);
           }
           break;
+        case "balance":
         case "saldo":
           {
             if (!OWNER_NUMBER.includes(who)) {
