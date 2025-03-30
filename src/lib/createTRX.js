@@ -4,8 +4,9 @@ import {
   DIGIFLAZZ_API_KEY,
   USERNAME_DIGIFLAZZ,
 } from "../utils/digiflazz.js";
+import { OWNER_NAME } from "../utils/owner.js";
 import crypto from "crypto";
-
+import dinero from "dinero.js";
 export async function createDigiTRX(refId, produk_sku, customer_no, m) {
   const sign = crypto
     .createHash("md5")
@@ -26,8 +27,6 @@ export async function createDigiTRX(refId, produk_sku, customer_no, m) {
         "Content-Type": "application/json",
       },
     });
-    console.log("ID wa neee ");
-    console.log("respon transaksi:", res.data.data);
 
     const { ref_id, status, rc, price, sn, buyer_sku_code } = res.data.data;
     // return status;
@@ -82,20 +81,60 @@ export async function createDigiTRX(refId, produk_sku, customer_no, m) {
   }
 }
 
-/*
-respon transaksi: {
-  ref_id: 'TX202502110828104562',
-  customer_no: '08780000123',
-  buyer_sku_code: 'xld10',
-  message: '',
-  status: 'Pending',
-  rc: '',
-  buyer_last_saldo: 990000,
-  sn: '',
-  price: 10000,
-  tele: '@telegram',
-  wa: '081234512345'
+export async function createDeposit(amount) {
+  const sign = crypto
+    .createHash("md5")
+    .update(USERNAME_DIGIFLAZZ + DIGIFLAZZ_API_KEY + "deposit")
+    .digest("hex");
+
+  try {
+    const data = {
+      username: USERNAME_DIGIFLAZZ,
+      amount: amount,
+      Bank: "BCA", //ubah aja sesuai bank yang diinginkan
+      owner_name: OWNER_NAME,
+      sign: sign,
+    };
+    const res = await axios.post(`${DIGIFLAZZ_BASE_URL}v1/deposit`, data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    console.log("res deposit", res.data);
+    return res.data;
+  } catch (error) {
+    console.error("Error deposit:", error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
 }
-*/
-// const digiflazzTrx = new DigiflazzTrx();
+
+export async function checkSaldo(params) {
+  const sign = crypto
+    .createHash("md5")
+    .update(USERNAME_DIGIFLAZZ + DIGIFLAZZ_API_KEY + "depo")
+    .digest("hex");
+
+  try {
+    const data = {
+      username: USERNAME_DIGIFLAZZ,
+      sign: sign,
+    };
+    const res = await axios.post(`${DIGIFLAZZ_BASE_URL}v1/cek-saldo`, data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    console.log("res deposit", res.data);
+    const depositAmount = parseInt(res.data.data.deposit, 10);
+    let saldo = await dinero({
+      amount: depositAmount,
+      currency: "IDR",
+      precision: 0,
+    }).toFormat();
+    return saldo;
+  } catch (error) {
+    console.error("Error deposit:", error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+}
 // await digiflazzTrx.transaksi(generateReffId(), "xld10", "087800001233");

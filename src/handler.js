@@ -5,10 +5,12 @@ import {
 } from "@whiskeysockets/baileys";
 import "dotenv/config";
 import { replyWIthInfo, reply } from "./lib/messageHandle.js";
-import { createDigiTRX } from "./lib/createTRX.js";
+import { createDigiTRX, createDeposit, checkSaldo } from "./lib/createTRX.js";
 import { testResponses } from "./index.js";
 import { generateUserId } from "./lib/makeid.js";
+import { OWNER_NUMBER } from "./utils/owner.js";
 import { parseResMessage } from "./utils/parseResMessage.js";
+import { parse } from "path";
 export default async function handler(sock, m) {
   const senderNumber = m.key.remoteJid;
   const isGroup = senderNumber.endsWith("@g.us");
@@ -64,21 +66,25 @@ export default async function handler(sock, m) {
 
     if (firstmess) {
       let who = m.key.participant;
-      const checking =
-        who == process.env.OWNER1 ||
-        who == process.env.OWNER2 ||
-        who == process.env.OWNER3 ||
-        who == process.env.OWNER4;
       switch (pesan) {
         case "q":
           {
-            reply(sock, m, "halo tes");
+            await reply(sock, m, "halo tes");
 
             console.log(testResponses);
           }
           break;
         case "digi":
-          console.log("digi");
+          if (!OWNER_NUMBER.includes(who)) {
+            await reply(
+              sock,
+              m,
+              "perintah hanya untuk Owner\n Kamu bukan owner !!!"
+            );
+            return;
+          }
+          if (m.args.length < 2)
+            return await reply(sock, m, "Masukan nomor dan nominal!!!");
           let refId = await generateUserId();
           let results = await createDigiTRX(refId, m.args[0], m.args[1], m);
           if (results === "Sukses") {
@@ -90,7 +96,7 @@ export default async function handler(sock, m) {
               global.ResponseTemp[refId].data.price,
               global.ResponseTemp[refId].data.sn
             );
-            replyWIthInfo(sock, m, responseMessage);
+            await replyWIthInfo(sock, m, responseMessage);
             delete global.ResponseTemp[refId];
           } else if (results === "Pending") {
             const responseMessage = await parseResMessage(
@@ -101,596 +107,57 @@ export default async function handler(sock, m) {
               global.ResponseTemp[refId].data.price,
               global.ResponseTemp[refId].data.sn
             );
-            replyWIthInfo(sock, m, responseMessage);
+            await replyWIthInfo(sock, m, responseMessage);
           }
           break;
-        //         case "pin":
-        //           {
-        //             if (!q) return setReply(mess.query);
-        //             //try {
-        //             await setReply(mess.wait);
+        case "deposit":
+          {
+            if (!OWNER_NUMBER.includes(who)) {
+              await reply(
+                sock,
+                m,
+                "perintah hanya untuk Owner\n Kamu bukan owner !!!"
+              );
+              return;
+            }
+            if (m.args.length < 1 && m.args[0] != parseInt(m.args[0]))
+              return await reply(sock, m, "Masukan nominal deposit!!!");
+            const amount = parseInt(m.args[0]);
+            let results = await createDeposit(amount);
+            console.log("reuslt", results);
+            const resultAmount = parseInt(results.data.amount);
+            const responseMessage =
+              "Silahkan melakukan deposit dengan nominal " +
+              resultAmount +
+              "\n*" +
+              results.data.notes +
+              "*";
 
-        //             async function createImage(url) {
-        //               const { imageMessage } = await generateWAMessageContent(
-        //                 {
-        //                   image: {
-        //                     url,
-        //                   },
-        //                 },
-        //                 {
-        //                   upload: conn.waUploadToServer,
-        //                 }
-        //               );
-        //               return imageMessage;
-        //             }
+            console.log(responseMessage);
+            await reply(sock, m, responseMessage);
 
-        //             function shuffleArray(array) {
-        //               for (let i = array.length - 1; i > 0; i--) {
-        //                 const j = Math.floor(Math.random() * (i + 1));
-        //                 [array[i], array[j]] = [array[j], array[i]];
-        //               }
-        //             }
+            await reply(sock, m, String(results.data.amount));
+            console.log(results);
+          }
+          break;
+        case "saldo":
+          {
+            if (!OWNER_NUMBER.includes(who)) {
+              await reply(
+                sock,
+                m,
+                "perintah hanya untuk Owner\n Kamu bukan owner !!!"
+              );
+              return;
+            }
+            let results = await checkSaldo();
+            console.log("saldo", results);
+            const responseMessage = "Saldo anda saat ini " + results;
+            console.log(responseMessage);
+            await reply(sock, m, responseMessage);
+          }
 
-        //             let push = [];
-        //             let { data } = await axios.get(
-        //               `https://www.pinterest.com/resource/BaseSearchResource/get/?source_url=%2Fsearch%2Fpins%2F%3Fq%3D${q}&data=%7B%22options%22%3A%7B%22isPrefetch%22%3Afalse%2C%22query%22%3A%22${q}%22%2C%22scope%22%3A%22pins%22%2C%22no_fetch_context_on_resource%22%3Afalse%7D%2C%22context%22%3A%7B%7D%7D&_=1619980301559`
-        //             );
-        //             let res = data.resource_response.data.results.map(
-        //               (v) => v.images.orig.url
-        //             );
-        //             console.log(res.length);
-
-        //             // shuffleArray(res); // Mengacak array
-
-        //             let ult = res.splice(0, res.length); // Mengambil 10 gambar pertama dari array yang sudah diacak
-        //             let i = 1;
-        //             let bodyne = `iki to https://i.pinimg.com/236x/f0/40/aa/f040aa5ba0cfaeb6086aaa58bb7a16bf.jpg \n lasjah \n lorem`;
-        //             for (let pus of ult) {
-        //               push.push({
-        //                 body: proto.Message.InteractiveMessage.Body.fromObject({
-        //                   text: bodyne,
-        //                 }),
-        //                 footer: proto.Message.InteractiveMessage.Footer.fromObject({
-        //                   text: "tes hallo",
-        //                 }),
-        //                 header: proto.Message.InteractiveMessage.Header.fromObject({
-        //                   title: "Hasil.",
-        //                   hasMediaAttachment: true,
-        //                   imageMessage: await createImage(pus),
-        //                 }),
-        //                 nativeFlowMessage:
-        //                   proto.Message.InteractiveMessage.NativeFlowMessage.fromObject(
-        //                     {}
-        //                   ),
-        //               });
-        //             }
-
-        //             const msg = generateWAMessageFromContent(
-        //               m.chat,
-        //               {
-        //                 viewOnceMessage: {
-        //                   message: {
-        //                     messageContextInfo: {
-        //                       deviceListMetadata: {},
-        //                       deviceListMetadataVersion: 2,
-        //                     },
-        //                     interactiveMessage:
-        //                       proto.Message.InteractiveMessage.fromObject({
-        //                         body: proto.Message.InteractiveMessage.Body.create({
-        //                           text: "Hai\nDibawah ini Adalah hasil dari Pencarian Kamu",
-        //                         }),
-        //                         footer: proto.Message.InteractiveMessage.Footer.create({
-        //                           text: global.botName,
-        //                         }),
-        //                         header: proto.Message.InteractiveMessage.Header.create({
-        //                           hasMediaAttachment: false,
-        //                         }),
-        //                         carouselMessage:
-        //                           proto.Message.InteractiveMessage.CarouselMessage.fromObject(
-        //                             {
-        //                               cards: [...push],
-        //                             }
-        //                           ),
-        //                       }),
-        //                   },
-        //                 },
-        //               },
-        //               {}
-        //             );
-
-        //             await conn.relayMessage(m.chat, msg.message, {
-        //               messageId: msg.key.id,
-        //             });
-        //           }
-        //           break;
-
-        //         case "saldo":
-        //           {
-        //             if (!isGroup) return reply("hanya group");
-        //             if (
-        //               who == process.env.OWNER1 ||
-        //               who == process.env.OWNER2 ||
-        //               who == process.env.OWNER3 ||
-        //               who == process.env.OWNER4
-        //             ) {
-        //               const apiUrl = "https://api.digiflazz.com/v1/cek-saldo";
-        //               const signature = crypto
-        //                 .createHash("md5")
-        //                 .update(process.env.USERNAME_DIGI + process.env.APIKEY + "depo")
-        //                 .digest("hex");
-        //               console.log(signature);
-        //               // Prepare the request body for initiating the transaction
-        //               const makeRequestBody = {
-        //                 cmd: "deposit",
-        //                 username: process.env.USERNAME_DIGI,
-        //                 sign: signature,
-        //               };
-        //               console.log(makeRequestBody);
-        //               reply(`*PENGECEKAN SALDO*`);
-        //               function checkTransactionStatus() {
-        //                 // Make the POST request to initiate the transaction
-        //                 fetch(apiUrl, {
-        //                   method: "POST",
-        //                   headers: {
-        //                     "Content-Type": "application/json",
-        //                   },
-        //                   body: JSON.stringify(makeRequestBody),
-        //                 })
-        //                   .then((response) => response.json())
-        //                   .then((data) => {
-        //                     const status = data.data.status;
-        //                     let convert = dinero({
-        //                       amount: data.data.deposit,
-        //                       currency: "IDR",
-        //                       precision: 0,
-        //                     }).toFormat();
-        //                     console.log(convert);
-
-        //                     let balas = `
-        // ┏━━ꕥ *「 SALDO YANG DIMILIKI 」* ꕥ━⬣
-        // ┃> *SISA SALDO:* ${convert}
-        // ┗━━━━━━━━━━━━━━━━━━━ꕥ`;
-
-        //                     if (status === "Pending") {
-        //                       // Wait for a few seconds before checking the status again
-        //                       setTimeout(() => {
-        //                         checkTransactionStatus(); // Call the function again to check the status
-        //                       }, 5000);
-        //                     } else if (status === "Gagal") {
-        //                       reply(`*Transaction failed.* ${data.data.message}`);
-        //                     } else {
-        //                       // If the status is not 'Pending' or 'Failed', set the reply
-        //                       reply(balas);
-        //                     }
-        //                   })
-        //                   .catch((error) => {
-        //                     // Handle any errors that occur during the API request
-        //                     console.error("Error:", error);
-        //                     reply(
-        //                       "Gagal memproses permintaan, silakan coba lagi nanti."
-        //                     );
-        //                   });
-        //               }
-
-        //               // Call the function to initiate the API request and check the status
-        //               checkTransactionStatus();
-        //             } else {
-        //               let penyusub = m.key.participant.split("@")[0];
-        //               var kirimke = "6289649178812@s.whatsapp.net";
-        //               sock.sendMessage(kirimke, {
-        //                 text: `penyusub ki ${penyusub}`,
-        //               });
-        //             }
-        //           }
-        //           break;
-        //         case "list":
-        //           {
-        //             if (!isGroup) return reply("hanya group");
-        //             if (who == "6289649178812@s.whatsapp.net") {
-        //               const apiUrl = "https://api.digiflazz.com/v1/price-list";
-        //               const signature = crypto
-        //                 .createHash("md5")
-        //                 .update(
-        //                   process.env.USERNAME_DIGI + process.env.APIKEY + "pricelist"
-        //                 )
-        //                 .digest("hex");
-        //               console.log(signature);
-        //               // Prepare the request body for initiating the transaction
-        //               const makeRequestBody = {
-        //                 cmd: "prepaid",
-        //                 username: process.env.USERNAME_DIGI,
-        //                 sign: signature,
-        //               };
-        //               // console.log(makeRequestBody);
-        //               reply(`*LIST HARGA SEDANG DIMUAT*`);
-        //               function checkTransactionStatus() {
-        //                 // Make the POST request to initiate the transaction
-        //                 fetch(apiUrl, {
-        //                   method: "POST",
-        //                   headers: {
-        //                     "Content-Type": "application/json",
-        //                   },
-        //                   body: JSON.stringify(makeRequestBody),
-        //                 })
-        //                   .then((response) => response.json())
-        //                   .then((data) => {
-        //                     const status = data.data.status;
-        //                     console.log(data);
-        //                     let iki = "";
-        //                     let balas = `
-        // ┏━━ꕥ *「 LIST HARGA 」* ꕥ━⬣
-        // ┃> *LIST SEMUA HARGA:* ${data.data.map(
-        //                       (list) => `
-        // ┃>KATEGORI ${list.category}
-        // ┃>PRODUK ${list.product_name}
-        // ┃>NAMA SELLER ${list.seller_name}
-        // ┃>HARGA ${dinero({
-        //                         amount: list.price,
-        //                         currency: "IDR",
-        //                         precision: 0,
-        //                       }).toFormat()}
-        // ┃>STATUS BUYER ${list.buyer_product_status}
-        // ┃>STATUS SELLER ${list.seller_product_status}
-        // ┃>CUT OFF ${list.start_cut_off}-${list.end_cut_off}
-        // `
-        //                     )}┗━━━━━━━━━━━━━━━━━━━ꕥ`;
-        //                     if (status === "Pending") {
-        //                       // Wait for a few seconds before checking the status again
-        //                       setTimeout(() => {
-        //                         checkTransactionStatus(); // Call the function again to check the status
-        //                       }, 5000);
-        //                     } else if (status === "Gagal") {
-        //                       reply(`*Transaction failed.* ${data.data.message}`);
-        //                     } else {
-        //                       // If the status is not 'Pending' or 'Failed', set the reply
-        //                       reply(balas);
-        //                     }
-        //                   })
-        //                   .catch((error) => {
-        //                     // Handle any errors that occur during the API request
-        //                     console.error("Error:", error);
-        //                     reply(
-        //                       "Gagal memproses permintaan, silakan coba lagi nanti."
-        //                     );
-        //                   });
-        //               }
-
-        //               // Call the function to initiate the API request and check the status
-        //               checkTransactionStatus();
-        //             } else {
-        //               let penyusub = m.key.participant.split("@")[0];
-        //               var kirimke = "6289649178812@s.whatsapp.net";
-        //               sock.sendMessage(kirimke, {
-        //                 text: `penyusub ki ${penyusub}`,
-        //               });
-        //             }
-        //           }
-        //           break;
-        //         case "deposit":
-        //           {
-        //             let q = parseInt(m.args.join());
-        //             if (!isGroup) return reply("hanya group");
-        //             if (
-        //               who == "6289649178812@s.whatsapp.net" ||
-        //               who == "6285293001966@s.whatsapp.net" ||
-        //               who == "6285742736537@s.whatsapp.net"
-        //             ) {
-        //               const apiUrl = "https://api.digiflazz.com/v1/deposit";
-        //               const signature = crypto
-        //                 .createHash("md5")
-        //                 .update(
-        //                   process.env.USERNAME_DIGI + process.env.APIKEY + "deposit"
-        //                 )
-        //                 .digest("hex");
-        //               console.log(signature);
-        //               // if (q != int) return reply('masukan nominal');
-        //               console.log(typeof q);
-        //               const makeRequestBody = {
-        //                 username: process.env.USERNAME_DIGI,
-        //                 amount: q,
-        //                 Bank: "BCA",
-        //                 owner_name: "ADYSTI EREN FATTAAH NURRIZQI",
-        //                 sign: signature,
-        //               };
-        //               console.log(makeRequestBody);
-        //               reply(`*WAIT A MINUTE*`);
-        //               function checkTransactionStatus() {
-        //                 // Make the POST request to initiate the transaction
-        //                 fetch(apiUrl, {
-        //                   method: "POST",
-        //                   headers: {
-        //                     "Content-Type": "application/json",
-        //                   },
-        //                   body: JSON.stringify(makeRequestBody),
-        //                 })
-        //                   .then((response) => response.json())
-        //                   .then((data) => {
-        //                     console.log(data);
-        //                     const status = data.data.status;
-        //                     if (data.data.rc != "00")
-        //                       return reply(
-        //                         `
-        // ┏━━ꕥ *「 DEPOSIT SALDO GAGAL 」* ꕥ━⬣
-        // ┃> *DEPOSIT:* ${data.data.deposit}
-        // ┃> *MESSAGE:* ${data.data.message}
-        // ┗━━━━━━━━━━━━━━━━━━━ꕥ;
-        //                    `
-        //                       );
-
-        //                     let balas = `
-        // ┏━━ꕥ *「 SALDO YANG DIMILIKI 」* ꕥ━⬣
-        // ┃> *NAMA BANK:* BCA
-        // ┃> *JUMLAH TRANSFER:* ${data.data.amount}
-        // ┃> *CATATAN:* ${data.data.notes}
-        // ┗━━━━━━━━━━━━━━━━━━━ꕥ`;
-
-        //                     if (status === "Pending") {
-        //                       // Wait for a few seconds before checking the status again
-        //                       setTimeout(() => {
-        //                         checkTransactionStatus(); // Call the function again to check the status
-        //                       }, 5000);
-        //                     } else if (status === "Gagal") {
-        //                       reply(`*Transaction failed.* ${data.data.message}`);
-        //                     } else {
-        //                       // If the status is not 'Pending' or 'Failed', set the reply
-        //                       reply(balas);
-        //                     }
-        //                   })
-        //                   .catch((error) => {
-        //                     // Handle any errors that occur during the API request
-        //                     console.error("Error:", error);
-        //                     reply(
-        //                       "Gagal memproses permintaan, silakan coba lagi nanti."
-        //                     );
-        //                   });
-        //               }
-
-        //               // Call the function to initiate the API request and check the status
-        //               checkTransactionStatus();
-        //             } else {
-        //               let penyusub = m.key.participant.split("@")[0];
-        //               var kirimke = "6289649178812@s.whatsapp.net";
-        //               sock.sendMessage(kirimke, {
-        //                 text: `penyusub ki ${penyusub}`,
-        //               });
-        //             }
-        //           }
-        //           break;
-        //         case "digi2":
-        //           {
-        //             let order = "";
-        //             if (!isGroup) return reply("hanya group");
-        //             if (
-        //               who == process.env.OWNER1 ||
-        //               who == process.env.OWNER2 ||
-        //               who == process.env.OWNER3 ||
-        //               who == process.env.OWNER4
-        //             ) {
-        //               let refId = makeid(7);
-        //               const apiUrl = "https://api.digiflazz.com/v1/transaction";
-        //               const buyerSkuCode = m.args[0]; // Replace this with the product code
-        //               const customerNo = m.args[1]; // Replace this with the customer's phone number
-        //               order = buyerSkuCode;
-        //               // Calculate the signature using the specified formula: md5(username + apiKey + ref_id)
-        //               const signature = crypto
-        //                 .createHash("md5")
-        //                 .update(process.env.USERNAME_DIGI + process.env.APIKEY + refId)
-        //                 .digest("hex");
-        //               console.log(signature);
-        //               // Prepare the request body for initiating the transaction
-        //               const makeRequestBody = {
-        //                 commands: "pay-pasca",
-        //                 username: process.env.USERNAME_DIGI,
-        //                 buyer_sku_code: buyerSkuCode,
-        //                 customer_no: customerNo,
-        //                 ref_id: refId,
-        //                 sign: signature,
-        //               };
-        //               console.log(makeRequestBody);
-        //               reply(`*TUNGGU SEBENTAR YAK*`);
-        //               function checkTransactionStatus() {
-        //                 // Make the POST request to initiate the transaction
-        //                 fetch(apiUrl, {
-        //                   method: "POST",
-        //                   headers: {
-        //                     "Content-Type": "application/json",
-        //                   },
-        //                   body: JSON.stringify(makeRequestBody),
-        //                 })
-        //                   .then((response) => response.json())
-        //                   .then((data) => {
-        //                     const status = data.data.status;
-        //                     console.log(data.data);
-
-        //                     if (status === "Pending") {
-        //                       // Wait for a few seconds before checking the status again
-        //                       setTimeout(() => {
-        //                         checkTransactionStatus(); // Call the function again to check the status
-        //                       }, 5000);
-        //                     } else if (status === "Gagal") {
-        //                       reply(`*Transaction failed.* ${data.data.message}`);
-        //                     } else {
-        //                       let balas = `
-        // ┏━━ꕥ 「 DETAIL ORDERAN ${order.toUpperCase()}」 ꕥ━⬣
-        // ┃> NO ID PLN: ${data.data.customer_no}
-        // ┃> NAMA ${data.data.customer_name}
-        // ┃> BIAYA ADMIN ${data.data.admin}
-        // ┃> TARIF ${data.data.desc.tarif}
-        // ┃> DAYA ${data.data.desc.daya}
-        // ┃> LEMBAR TAGIHAN ${data.data.desc.lembar_tagihan}
-        // ┃> PERIODE BULAN ${data.data.desc.detail[0].periode}
-        // ┃> NILAI TAGIHAN ${data.data.desc.detail[0].nilai_tagihan}
-        // ┃> DENDA ${data.data.desc.detail[0].denda}
-        // ┃> METERAN AWAL ${data.data.desc.detail[0].meter_awal}
-        // ┃> METERAN AKHIR ${data.data.desc.detail[0].meter_akhir}
-        // ┃> STATUS: ${data.data.message}
-        // ┃> Ref_Id: ${data.data.ref_id}
-        // ┃> RC STATUS: ${data.data.rc}
-        // ┗━━━━━━━━━━━━━━━━━━━ꕥ`;
-        //                       reply(balas);
-        //                     }
-        //                   })
-        //                   .catch((error) => {
-        //                     // Handle any errors that occur during the API request
-        //                     console.error("Error:", error);
-        //                     reply(
-        //                       "Gagal memproses permintaan, silakan coba lagi nanti.",
-        //                       +error
-        //                     );
-        //                   });
-        //               }
-
-        //               // Call the function to initiate the API request and check the status
-        //               checkTransactionStatus();
-        //             } else {
-        //               let penyusub = m.key.participant.split("@")[0];
-        //               var kirimke = "6289649178812@s.whatsapp.net";
-        //               sock.sendMessage(kirimke, {
-        //                 text: `penyusub ki ${penyusub}`,
-        //               });
-        //             }
-        //           }
-        //           break;
-        //         case "setkios":
-        //           process.env.KIOSGAMER = m.args[0];
-
-        //           // console.log(process.env.KIOSGAMER);
-        //           break;
-        //         case "topup":
-        //         case "tp":
-        //           {
-        //             let order = "";
-        //             if (!isGroup) return reply("hanya group");
-        //             if (
-        //               who == process.env.OWNER1 ||
-        //               who == process.env.OWNER2 ||
-        //               who == process.env.OWNER3 ||
-        //               who == process.env.OWNER4
-        //             ) {
-        //               let retries = 0;
-        //               const maxRetries = 36;
-        //               let refId = makeid(7);
-        //               const merchant_id = process.env.MERCHANT_ID;
-
-        //               const signatureInput = `${merchant_id}:${process.env.SIGNATUREAPI}:${refId}`;
-        //               const signature = crypto
-        //                 .createHash("md5")
-        //                 .update(signatureInput)
-        //                 .digest("hex");
-        //               const kode_produk = m.args[0];
-        //               const id = m.args[1];
-        //               const server = m.args[2] == true ? m.args[2] : "";
-        //               reply(`*TUNGGU SEBENTAR YAK*`);
-        //               async function lesgo() {
-        //                 try {
-        //                   const data = await axios.get(
-        //                     `https://v1.apigames.id/v2/transaksi?ref_id=${refId}&merchant_id=${process.env.MERCHANT_ID}&produk=${kode_produk}&tujuan=${id}&signature=${signature}&server_id=${server}`
-        //                   );
-
-        //                   console.log(data.data);
-        //                   // console.log(data.data.status);
-        //                   if (data.data.data.status === "Sukses") {
-        //                     const balas = `
-        // ┏━━ꕥ *「 DETAIL ORDERAN ${kode_produk.toUpperCase()}」* ꕥ━⬣
-        // ┃> *ID GAME:* ${data.data.data.destination}
-        // ┃> *PRODUK:* ${data.data.data.product_code}
-        // ┃> *SN:* ${data.data.data.sn}
-        // ┃> *STATUS:* ${data.data.data.status}
-        // ┃> *Ref_Id:* ${data.data.data.ref_id}
-        // ┗━━━━━━━━━━━━━━━━━━━ꕥ`;
-        //                     replyWIthInfo(balas);
-        //                   } else if (data.data.data.status == "Pending") {
-        //                     if (retries < maxRetries) {
-        //                       retries++;
-        //                       await new Promise((resolve) => setTimeout(resolve, 5000));
-        //                       lesgo();
-        //                     } else {
-        //                       setReply("Bentar status masih pending harap tunggu");
-        //                       lesgo();
-        //                     }
-        //                   } else {
-        //                     let error =
-        //                       data.data.error_msg == true
-        //                         ? data.data.error_msg
-        //                         : data.data.data.message;
-        //                     reply(`ERROR!!!!! \n ${error}`);
-        //                   }
-        //                   // const apiUrl = process.env.APIGAMES;
-        //                   // const buyerSkuCode = m.args[0]; // Replace this with the product code
-        //                   // const customerNo = m.args[1]; // Replace this with the customer's phone number
-        //                   // const serverID = m.args.length == 3 ? m.args[2] : '';
-
-        //                   // const makeRequestBody = {
-        //                   //   ref_id: refId,
-        //                   //   merchant_id: merchant_id,
-        //                   //   produk: buyerSkuCode,
-        //                   //   tujuan: customerNo,
-        //                   //   server_id: serverID,
-        //                   //   signature: signature,
-        //                   // };
-        //                   // console.log(makeRequestBody);
-        //                   // reply(`*TUNGGU SEBENTAR YAK*`);
-        //                   // async function checkTransactionStatus() {
-        //                   //   // Make the POST request to initiate the transaction
-        //                   //   try {
-        //                   //     const response = await axios.post(
-        //                   //       apiUrl,
-        //                   //       JSON.stringify(makeRequestBody),
-        //                   //     );
-        //                   //     console.log(response.data);
-        //                   //     const status =
-        //                   //       response.data.data.status == true
-        //                   //         ? response.data.data.status
-        //                   //         : response.data.status;
-        //                   //     console.log(status);
-        //                   //     //                   const balas = `
-        //                   //     // ┏━━ꕥ *「 DETAIL ORDERAN ${order.toUpperCase()}」* ꕥ━⬣
-        //                   //     // ┃> *ID GAME:* ${response.data.destination}
-        //                   //     // ┃> *PRODUK:* ${response.data.product_code}
-        //                   //     // ┃> *SN:* ${response.data.sn}
-        //                   //     // ┃> *STATUS:* ${response.data.message}
-        //                   //     // ┃> *Ref_Id:* ${response.data.sdfsdx2}
-        //                   //     // ┃> *Trx_Id:* ${response.data.sdfsdx2}
-        //                   //     // ┃> *RC STATUS:* ${response.data.rc}
-        //                   //     // ┗━━━━━━━━━━━━━━━━━━━ꕥ`;
-        //                   //     if (status === 'Pending') {
-        //                   //       // Wait for a few seconds before checking the status again
-        //                   //       setTimeout(() => {
-        //                   //         checkTransactionStatus(); // Call the function again to check the status
-        //                   //       }, 5000);
-        //                   //     } else if (status == 0) {
-        //                   //       // If the status is not 'Pending' or 'Failed', set the reply
-        //                   //       reply(
-        //                   //         'Gagal memproses permintaan, silakan coba lagi nanti.' +
-        //                   //           response.data.error_msg,
-        //                   //       );
-        //                   //     }
-        //                   //   } catch (error) {
-        //                   //     // Handle any errors that occur during the API request
-        //                   //     console.error('Error:', error);
-        //                   //     reply(
-        //                   //       'kjjkj Gagal memproses permintaan, silakan coba lagi nanti.',
-        //                   //       +error,
-        //                   //     );
-        //                   //   }
-        //                   // }
-
-        //                   // // Call the function to initiate the API request and check the status
-        //                   // checkTransactionStatus();
-        //                 } catch (err) {
-        //                   console.log(err);
-        //                 }
-        //               }
-        //               lesgo();
-        //             } else {
-        //               let penyusub = m.key.participant.split("@")[0];
-        //               var kirimke = "6289649178812@s.whatsapp.net";
-        //               sock.sendMessage(kirimke, {
-        //                 text: `penyusub ki ${penyusub}`,
-        //               });
-        //             }
-        //           }
-        //           break;
+          break;
       }
     }
   } catch (error) {
