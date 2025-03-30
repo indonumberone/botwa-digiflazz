@@ -101,7 +101,7 @@ export async function createCallbackHandler(sock) {
             buyer_sku_code,
             customer_no,
             price,
-            sn
+            message
           );
           replyWIthInfo(sock, m, responseMessage);
           delete global.ResponseTemp[ref_id];

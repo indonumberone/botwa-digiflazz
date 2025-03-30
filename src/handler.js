@@ -86,29 +86,38 @@ export default async function handler(sock, m) {
           }
           if (m.args.length < 2)
             return await reply(sock, m, "Masukan nomor dan nominal!!!");
-          let refId = await generateUserId();
-          let results = await createDigiTRX(refId, m.args[0], m.args[1], m);
-          if (results === "Sukses") {
-            const responseMessage = await parseResMessage(
-              results,
-              refId,
-              m.args[0],
-              m.args[1],
-              global.ResponseTemp[refId].data.price,
-              global.ResponseTemp[refId].data.sn
-            );
-            await replyWIthInfo(sock, m, responseMessage);
-            delete global.ResponseTemp[refId];
-          } else if (results === "Pending") {
-            const responseMessage = await parseResMessage(
-              results,
-              refId,
-              m.args[0],
-              m.args[1],
-              global.ResponseTemp[refId].data.price,
-              global.ResponseTemp[refId].data.sn
-            );
-            await replyWIthInfo(sock, m, responseMessage);
+          try {
+            let refId = await generateUserId();
+            let results = await createDigiTRX(refId, m.args[0], m.args[1], m);
+            if (results === "Sukses") {
+              const responseMessage = await parseResMessage(
+                results,
+                refId,
+                m.args[0],
+                m.args[1],
+                global.ResponseTemp[refId].data.price,
+                global.ResponseTemp[refId].data.sn
+              );
+              await replyWIthInfo(sock, m, responseMessage);
+              delete global.ResponseTemp[refId];
+            } else if (results === "Pending") {
+              const responseMessage = await parseResMessage(
+                results,
+                refId,
+                m.args[0],
+                m.args[1],
+                global.ResponseTemp[refId].data.price,
+                global.ResponseTemp[refId].data.sn
+              );
+              await replyWIthInfo(sock, m, responseMessage);
+            }
+          } catch (error) {
+            const responseMessage =
+              "Gagal melakukan transaksi dengan refID : " +
+              error.data.ref_id +
+              "\nalasan : " +
+              error.data.message;
+            await reply(sock, m, responseMessage);
           }
           break;
 
@@ -122,24 +131,34 @@ export default async function handler(sock, m) {
               );
               return;
             }
-            if (m.args.length < 1 && m.args[0] != parseInt(m.args[0]))
+            if (m.args.length < 1 && m.args[0] != parseInt(m.args[0])) {
               return await reply(sock, m, "Masukan nominal deposit!!!");
-            const amount = parseInt(m.args[0]);
-            let results = await createDeposit(amount);
-            console.log("reuslt", results);
-            const resultAmount = parseInt(results.data.amount);
-            const responseMessage =
-              "Silahkan melakukan deposit dengan nominal " +
-              resultAmount +
-              "\n*" +
-              results.data.notes +
-              "*";
+            }
+            try {
+              const amount = parseInt(m.args[0]);
+              let results = await createDeposit(amount);
+              console.log("reuslt", results);
+              const resultAmount = parseInt(results.data.amount);
+              const responseMessage =
+                "Silahkan melakukan deposit dengan nominal " +
+                resultAmount +
+                "\n*" +
+                results.data.notes +
+                "*";
 
-            console.log(responseMessage);
-            await reply(sock, m, responseMessage);
+              console.log(responseMessage);
+              await reply(sock, m, responseMessage);
 
-            await reply(sock, m, String(results.data.amount));
-            console.log(results);
+              await reply(sock, m, String(results.data.amount));
+              console.log(results);
+            } catch (error) {
+              const responseMessage =
+                "Gagal melakukan transaksi dengan refID : " +
+                error.data.ref_id +
+                "\nalasan : " +
+                error.data.message;
+              await reply(sock, m, responseMessage);
+            }
           }
           break;
         case "balance":
@@ -153,11 +172,20 @@ export default async function handler(sock, m) {
               );
               return;
             }
-            let results = await checkSaldo();
-            console.log("saldo", results);
-            const responseMessage = "Saldo anda saat ini " + results;
-            console.log(responseMessage);
-            await reply(sock, m, responseMessage);
+            try {
+              let results = await checkSaldo();
+              console.log("saldo", results);
+              const responseMessage = "Saldo anda saat ini " + results;
+              console.log(responseMessage);
+              await reply(sock, m, responseMessage);
+            } catch (error) {
+              const responseMessage =
+                "Gagal melakukan transaksi dengan refID : " +
+                error.data.ref_id +
+                "\nalasan : " +
+                error.data.message;
+              await reply(sock, m, responseMessage);
+            }
           }
 
           break;

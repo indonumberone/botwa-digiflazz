@@ -1,6 +1,6 @@
 # Bot Digi - DigiFlazz Transaction Bot
 
-![Bot Digi Logo](./img/image.jpeg)
+![Bot Digi Logo](./img/image.png)
 
 ## Overview
 
@@ -86,8 +86,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Contact
 
-- Developer: [Muqsith]
-- Instagram: [@flyingcat121](https://instagram.com/flyingcat121)
 - Email: [01muqsith@gmail.com]
 - GitHub: [indonumberone](https://github.com/indonumberone)
 
