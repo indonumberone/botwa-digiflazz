@@ -17,12 +17,11 @@ export default async function handler(sock, m) {
   const groupMetadata = isGroup
     ? await sock.groupMetadata(senderNumber).catch(() => {})
     : null;
-
+  let body = "";
   if (m.message) {
     m.mtype = getContentType(m.message);
-
     try {
-      var body =
+      body =
         m.mtype === "conversation"
           ? m.message.conversation
           : m.mtype == "imageMessage"
@@ -65,7 +64,7 @@ export default async function handler(sock, m) {
     let q = m.args.join(" ");
 
     if (firstmess) {
-      let who = m.key.participant;
+      let who = m.key.participant ? m.key.participant : m.key.remoteJid;
       switch (pesan) {
         case "q":
           {
