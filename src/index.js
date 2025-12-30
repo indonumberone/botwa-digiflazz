@@ -5,10 +5,15 @@ import {
   fetchLatestBaileysVersion,
 } from "@whiskeysockets/baileys";
 import handler from "./handler.js";
+import qrcode from "qrcode-terminal";
 import express from "express";
 import bodyParser from "body-parser";
 import "dotenv/config";
 import { createCallbackHandler } from "./lib/callbackHandler.js";
+
+let botStartTime = null;
+let isConnected = false;
+let notifiedChats = new Set();
 
 async function connectToWhatsApp() {
   const { state, saveCreds } = await useMultiFileAuthState("src/login");
@@ -16,14 +21,21 @@ async function connectToWhatsApp() {
 
   const sock = makeWASocket({
     version,
-    printQRInTerminal: true,
     auth: state,
+    syncFullHistory: false,
+    markOnlineOnConnect: true,
   });
   await createCallbackHandler(sock);
 
   sock.ev.on("connection.update", async (update) => {
-    const { connection, lastDisconnect } = update;
+    const { connection, lastDisconnect, qr } = update;
+    if (qr) {
+      qrcode.generate(qr, { small: true });
+      console.log("Scan QR above via WhatsApp → Linked devices");
+    }
     if (connection === "close") {
+      isConnected = false;
+      notifiedChats.clear();
       const shouldReconnect =
         lastDisconnect?.error?.output?.statusCode !==
         DisconnectReason.loggedOut;
@@ -40,47 +52,55 @@ async function connectToWhatsApp() {
       }
     } else if (connection === "open") {
       console.log("opened connection");
+      botStartTime = Date.now();
+      isConnected = true;
+      notifiedChats.clear();
     }
   });
 
   sock.ev.on("creds.update", saveCreds);
 
   sock.ev.on("messages.upsert", async (m) => {
-    m.messages.forEach(async (message) => {
-      await handler(sock, message, m);
-    });
+    for (const message of m.messages) {
+      if (message.key.fromMe) {
+        continue;
+      }
+
+      if (message.key.remoteJid === "status@broadcast") {
+        continue;
+      }
+
+      const messageTimestamp = message.messageTimestamp
+        ? parseInt(message.messageTimestamp) * 1000
+        : Date.now();
+      if (isConnected && botStartTime && messageTimestamp >= botStartTime) {
+        await handler(sock, message, m);
+      } else {
+        if (message.key && message.key.remoteJid) {
+          const chatId = message.key.remoteJid;
+
+          if (!notifiedChats.has(chatId)) {
+            notifiedChats.add(chatId);
+            await sock.sendMessage(chatId, {
+              text: "Bot sedang melakukan Sycronisasi, silakan tunggu sebentar yaa...",
+            });
+          }
+
+          await sock.readMessages([message.key]);
+          console.log(
+            `Skipped old message from ${chatId} (received before bot started)`
+          );
+        }
+      }
+    }
   });
 }
 export const app = express();
-export const port = 3030;
+export const port = process.env.PORT || 3030;
 export let testResponses = {};
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-// app.get("/", (req, res) => {
-//   res.status(200).send("Hello World!");
-// });
-// app.post("/webhook", (req, res) => {
-//   console.log(req.body);
-//   const refid = req.body.data.ref_id;
-//   testResponses[refid] = req.body;
-//   // console.log(testResponses[refid]);
-//   res.status(200).send("rcti ok");
-// });
-// app.get("/test", (req, res) => {
-//   const refid = req.query.refid;
-//   if (!refid) {
-//     return res.status(400).send({
-//       status: "failed",
-//       error_msg: "query salah",
-//     });
-//   }
-//   const data = testResponses[refid];
-//   res.status(200).send(data);
-// });
-
-// app.get('/kirim', (req, res) => {});
-
 app.listen(port, () => {
   console.log("express berjalan");
 });

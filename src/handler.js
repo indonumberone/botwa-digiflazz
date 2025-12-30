@@ -62,18 +62,19 @@ export default async function handler(sock, m) {
     m.args = body.replace(prefix, "").trim().split(/ +/).slice(1);
     console.log(m.args);
     let q = m.args.join(" ");
-    function handlingGrupMessage(sock, m) {
-      reply(
-        sock,
-        m,
-        "Untuk chat dalam group masih dalam perbaikan terima kasih"
-      );
-    }
+    // function handlingGrupMessage(sock, m) {
+    //   reply(
+    //     sock,
+    //     m,
+    //     "Untuk chat dalam group masih dalam perbaikan terima kasih"
+    //   );
+    // }
     if (firstmess) {
-      let who = m.key.participant ? m.key.participant : m.key.remoteJid;
+      let who = m.key.participant ? m.key.participantAlt : m.key.remoteJid;
       switch (pesan) {
         case "q":
           {
+            // console.log(JSON.stringify(m, null, 2));
             await reply(sock, m, "halo tes");
 
             console.log(testResponses);
@@ -81,10 +82,6 @@ export default async function handler(sock, m) {
           break;
         case "buy":
         case "digi":
-          if (isGroup) {
-            handlingGrupMessage(sock, m);
-            return;
-          }
           if (!OWNER_NUMBER.includes(who)) {
             await reply(
               sock,
@@ -132,10 +129,6 @@ export default async function handler(sock, m) {
 
         case "deposit":
           {
-            if (isGroup) {
-              handlingGrupMessage(sock, m);
-              return;
-            }
             if (!OWNER_NUMBER.includes(who)) {
               await reply(
                 sock,
@@ -177,10 +170,6 @@ export default async function handler(sock, m) {
         case "balance":
         case "saldo":
           {
-            if (isGroup) {
-              handlingGrupMessage(sock, m);
-              return;
-            }
             if (!OWNER_NUMBER.includes(who)) {
               await reply(
                 sock,
