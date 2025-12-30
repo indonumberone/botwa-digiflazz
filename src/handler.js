@@ -72,7 +72,7 @@ export default async function handler(sock, m) {
     if (firstmess) {
       let who = m.key.participantAlt
         ? m.key.participantAlt
-        : m.key.remoteJid.includes("@.s.whatsapp.net")
+        : m.key.remoteJid.includes("@s.whatsapp.net")
         ? m.key.remoteJid
         : m.key.remoteJidAlt;
       switch (pesan) {
@@ -112,6 +112,16 @@ export default async function handler(sock, m) {
               await replyWIthInfo(sock, m, responseMessage);
               delete global.ResponseTemp[refId];
             } else if (results === "Pending") {
+              const responseMessage = await parseResMessage(
+                results,
+                refId,
+                m.args[0],
+                m.args[1],
+                global.ResponseTemp[refId].data.price,
+                global.ResponseTemp[refId].data.sn
+              );
+              await replyWIthInfo(sock, m, responseMessage);
+            } else if (results === "Gagal") {
               const responseMessage = await parseResMessage(
                 results,
                 refId,

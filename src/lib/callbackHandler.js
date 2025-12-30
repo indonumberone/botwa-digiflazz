@@ -1,10 +1,12 @@
-import express from "express";
-import bodyParser from "body-parser";
 import { DIGIFLAZZ_SECRET_KEY } from "../utils/digiflazz.js";
 import createHmac from "create-hmac";
 import { replyWIthInfo, reply } from "./messageHandle.js";
 import { parseResMessage } from "../utils/parseResMessage.js";
-global.ResponseTemp = {};
+
+// Inisialisasi hanya jika belum ada
+if (!global.ResponseTemp) {
+  global.ResponseTemp = {};
+}
 
 async function isValidSecretFun(xHubSignature, rawBody) {
   if (!xHubSignature) return false;
@@ -18,32 +20,16 @@ async function isValidSecretFun(xHubSignature, rawBody) {
   return computed === signed;
 }
 
-export async function createCallbackHandler(sock) {
-  const app = express();
-  const port = 9999;
+export async function createCallbackHandler(sock, app) {
+  // app.get("/muncul", (req, res) => {
+  //   res.status(200).send(global.ResponseTemp);
+  // });
 
-  // Raw body buffer for signature verification
-  app.use(
-    express.json({
-      verify: (req, res, buf) => {
-        req.rawBody = buf.toString();
-      },
-    })
-  );
-
-  app.use(bodyParser.urlencoded({ extended: false }));
-
-  app.listen(port, () => {
-    if (sock) {
-      console.log("express berjalan dan sock ada");
-    } else {
-      console.log("express berjalan dan sock tidak ada");
-    }
-  });
-
-  app.get("/muncul", (req, res) => {
-    res.status(200).send(global.ResponseTemp);
-  });
+  // Clear cache endpoint
+  // app.delete("/muncul", (req, res) => {
+  //   global.ResponseTemp = {};
+  //   res.status(200).send({ message: "Cache cleared", data: {} });
+  // });
 
   app.post("/webhookdigi", async (req, res) => {
     console.log("digi " + JSON.stringify(req.body.data));

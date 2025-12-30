@@ -21,7 +21,7 @@ services:
     environment:
       - NODE_ENV=development
       - TZ=Asia/Jakarta
-    command: npm run dev
+    command: bun start
     networks:
       - botwa-network
 

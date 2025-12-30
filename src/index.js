@@ -15,6 +15,19 @@ let botStartTime = null;
 let isConnected = false;
 let notifiedChats = new Set();
 
+export const app = express();
+export const port = process.env.PORT || 3030;
+export let testResponses = {};
+
+app.use(
+  bodyParser.json({
+    verify: (req, res, buf) => {
+      req.rawBody = buf.toString();
+    },
+  })
+);
+app.use(bodyParser.urlencoded({ extended: false }));
+
 async function connectToWhatsApp() {
   const { state, saveCreds } = await useMultiFileAuthState("src/login");
   const { version, isLatest } = await fetchLatestBaileysVersion();
@@ -25,7 +38,9 @@ async function connectToWhatsApp() {
     syncFullHistory: false,
     markOnlineOnConnect: true,
   });
-  await createCallbackHandler(sock);
+
+  // Pass app instance to callback handler
+  await createCallbackHandler(sock, app);
 
   sock.ev.on("connection.update", async (update) => {
     const { connection, lastDisconnect, qr } = update;
@@ -95,14 +110,9 @@ async function connectToWhatsApp() {
     }
   });
 }
-export const app = express();
-export const port = process.env.PORT || 3030;
-export let testResponses = {};
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
 app.listen(port, () => {
-  console.log("express berjalan");
+  console.log(`Express running on port ${port}`);
 });
 
 connectToWhatsApp();
