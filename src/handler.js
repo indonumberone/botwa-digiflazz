@@ -72,7 +72,7 @@ export default async function handler(sock, m) {
     if (firstmess) {
       let who = m.key.participantAlt
         ? m.key.participantAlt
-        : m.key.remoteJid.includes("@.s.whatsapp.net")
+        : m.key.remoteJid.includes("@s.whatsapp.net")
         ? m.key.remoteJid
         : m.key.remoteJidAlt;
       switch (pesan) {
