@@ -10,6 +10,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import "dotenv/config";
 import { createCallbackHandler } from "./lib/callbackHandler.js";
+import fs from "fs/promises";
 
 let botStartTime = null;
 let isConnected = false;
@@ -51,9 +52,9 @@ async function connectToWhatsApp() {
     if (connection === "close") {
       isConnected = false;
       notifiedChats.clear();
-      const shouldReconnect =
-        lastDisconnect?.error?.output?.statusCode !==
-        DisconnectReason.loggedOut;
+
+      const statusCode = lastDisconnect?.error?.output?.statusCode;
+      const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
       console.log(
         "connection closed due to",
@@ -62,7 +63,18 @@ async function connectToWhatsApp() {
         shouldReconnect
       );
 
-      if (shouldReconnect) {
+      // Handle 401 error (logout) - clear session and reconnect
+      if (statusCode === 401 || statusCode === DisconnectReason.loggedOut) {
+        console.log("Session expired/logged out. Clearing session data...");
+        try {
+          await fs.rm("src/login", { recursive: true, force: true });
+          await fs.mkdir("src/login", { recursive: true });
+          console.log("Session cleared. Reconnecting for new QR...");
+        } catch (err) {
+          console.error("Error clearing session:", err);
+        }
+        connectToWhatsApp();
+      } else if (shouldReconnect) {
         connectToWhatsApp();
       }
     } else if (connection === "open") {
