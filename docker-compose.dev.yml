@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  botwa-digiflazz:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: botwa-digiflazz-dev
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    ports:
+      - "${PORT:-3030}:3030"
+    volumes:
+      - ./src:/app/src
+      - ./src/login:/app/src/login
+      - ./logs:/app/logs
+      - /app/node_modules
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+      - TZ=Asia/Jakarta
+    command: npm run dev
+    networks:
+      - botwa-network
+
+networks:
+  botwa-network:
+    driver: bridge
