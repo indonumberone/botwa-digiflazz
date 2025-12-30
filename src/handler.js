@@ -70,11 +70,16 @@ export default async function handler(sock, m) {
     //   );
     // }
     if (firstmess) {
-      let who = m.key.participant ? m.key.participantAlt : m.key.remoteJid;
+      let who = m.key.participantAlt
+        ? m.key.participantAlt
+        : m.key.remoteJid.includes("@.s.whatsapp.net")
+        ? m.key.remoteJid
+        : m.key.remoteJidAlt;
       switch (pesan) {
         case "q":
           {
-            // console.log(JSON.stringify(m, null, 2));
+            console.log("WHo", who);
+            console.log(JSON.stringify(m, null, 2));
             await reply(sock, m, "halo tes");
 
             console.log(testResponses);
