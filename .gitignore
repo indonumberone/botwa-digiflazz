@@ -1,8 +1,3 @@
 node_modules/
 src/login/
-test/
-p.js
-tes.js
-test.js
 .env
-spreadsheet.json

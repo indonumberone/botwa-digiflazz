@@ -17,12 +17,11 @@ export default async function handler(sock, m) {
   const groupMetadata = isGroup
     ? await sock.groupMetadata(senderNumber).catch(() => {})
     : null;
-
+  let body = "";
   if (m.message) {
     m.mtype = getContentType(m.message);
-
     try {
-      var body =
+      body =
         m.mtype === "conversation"
           ? m.message.conversation
           : m.mtype == "imageMessage"
@@ -63,12 +62,19 @@ export default async function handler(sock, m) {
     m.args = body.replace(prefix, "").trim().split(/ +/).slice(1);
     console.log(m.args);
     let q = m.args.join(" ");
-
+    // function handlingGrupMessage(sock, m) {
+    //   reply(
+    //     sock,
+    //     m,
+    //     "Untuk chat dalam group masih dalam perbaikan terima kasih"
+    //   );
+    // }
     if (firstmess) {
-      let who = m.key.participant;
+      let who = m.key.participant ? m.key.participantAlt : m.key.remoteJid;
       switch (pesan) {
         case "q":
           {
+            // console.log(JSON.stringify(m, null, 2));
             await reply(sock, m, "halo tes");
 
             console.log(testResponses);
