@@ -10,10 +10,24 @@ import express from "express";
 import bodyParser from "body-parser";
 import "dotenv/config";
 import { createCallbackHandler } from "./lib/callbackHandler.js";
+import fs from "fs/promises";
 
 let botStartTime = null;
 let isConnected = false;
 let notifiedChats = new Set();
+
+export const app = express();
+export const port = process.env.PORT || 3030;
+export let testResponses = {};
+
+app.use(
+  bodyParser.json({
+    verify: (req, res, buf) => {
+      req.rawBody = buf.toString();
+    },
+  })
+);
+app.use(bodyParser.urlencoded({ extended: false }));
 
 async function connectToWhatsApp() {
   const { state, saveCreds } = await useMultiFileAuthState("src/login");
@@ -25,7 +39,9 @@ async function connectToWhatsApp() {
     syncFullHistory: false,
     markOnlineOnConnect: true,
   });
-  await createCallbackHandler(sock);
+
+  // Pass app instance to callback handler
+  await createCallbackHandler(sock, app);
 
   sock.ev.on("connection.update", async (update) => {
     const { connection, lastDisconnect, qr } = update;
@@ -36,9 +52,9 @@ async function connectToWhatsApp() {
     if (connection === "close") {
       isConnected = false;
       notifiedChats.clear();
-      const shouldReconnect =
-        lastDisconnect?.error?.output?.statusCode !==
-        DisconnectReason.loggedOut;
+
+      const statusCode = lastDisconnect?.error?.output?.statusCode;
+      const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
       console.log(
         "connection closed due to",
@@ -47,7 +63,18 @@ async function connectToWhatsApp() {
         shouldReconnect
       );
 
-      if (shouldReconnect) {
+      // Handle 401 error (logout) - clear session and reconnect
+      if (statusCode === 401 || statusCode === DisconnectReason.loggedOut) {
+        console.log("Session expired/logged out. Clearing session data...");
+        try {
+          await fs.rm("src/login", { recursive: true, force: true });
+          await fs.mkdir("src/login", { recursive: true });
+          console.log("Session cleared. Reconnecting for new QR...");
+        } catch (err) {
+          console.error("Error clearing session:", err);
+        }
+        connectToWhatsApp();
+      } else if (shouldReconnect) {
         connectToWhatsApp();
       }
     } else if (connection === "open") {
@@ -95,14 +122,9 @@ async function connectToWhatsApp() {
     }
   });
 }
-export const app = express();
-export const port = process.env.PORT || 3030;
-export let testResponses = {};
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
 app.listen(port, () => {
-  console.log("express berjalan");
+  console.log(`Express running on port ${port}`);
 });
 
 connectToWhatsApp();

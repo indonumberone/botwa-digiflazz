@@ -7,6 +7,20 @@ import {
 import { OWNER_NAME } from "../utils/owner.js";
 import crypto from "crypto";
 import dinero from "dinero.js";
+
+// Inisialisasi global.ResponseTemp jika belum ada
+if (!global.ResponseTemp) {
+  global.ResponseTemp = {};
+}
+
+if (!DIGIFLAZZ_BASE_URL || !DIGIFLAZZ_API_KEY || !USERNAME_DIGIFLAZZ) {
+  console.error("Missing required environment variables:");
+  console.error("DIGIFLAZZ_BASE_URL:", DIGIFLAZZ_BASE_URL);
+  console.error("DIGIFLAZZ_API_KEY:", DIGIFLAZZ_API_KEY ? "SET" : "NOT SET");
+  console.error("USERNAME_DIGIFLAZZ:", USERNAME_DIGIFLAZZ);
+  throw new Error("Required environment variables are not set");
+}
+
 export async function createDigiTRX(refId, produk_sku, customer_no, m) {
   const sign = crypto
     .createHash("md5")
@@ -20,7 +34,7 @@ export async function createDigiTRX(refId, produk_sku, customer_no, m) {
       customer_no: customer_no,
       sign: sign,
       testing: true,
-      cb_url: "https://tes.javanshopid.biz.id/webhookdigi",
+      cb_url: "https://javansolo.muqsith.me/webhookdigi",
     };
     const res = await axios.post(`${DIGIFLAZZ_BASE_URL}v1/transaction`, data, {
       headers: {
@@ -30,6 +44,7 @@ export async function createDigiTRX(refId, produk_sku, customer_no, m) {
 
     const { ref_id, status, rc, price, sn, buyer_sku_code } = res.data.data;
     // return status;
+    // console.log("res transaksi", res.data);
     if (status === "Pending") {
       global.ResponseTemp[refId] = {
         jenis: "Transaksi",
@@ -138,3 +153,6 @@ export async function checkSaldo(params) {
   }
 }
 // await digiflazzTrx.transaksi(generateReffId(), "xld10", "087800001233");
+
+// Test transaksi
+// await createDigiTRX("test12345", "xld10", "087800001233");

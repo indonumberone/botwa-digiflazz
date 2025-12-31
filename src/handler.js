@@ -121,6 +121,16 @@ export default async function handler(sock, m) {
                 global.ResponseTemp[refId].data.sn
               );
               await replyWIthInfo(sock, m, responseMessage);
+            } else if (results === "Gagal") {
+              const responseMessage = await parseResMessage(
+                results,
+                refId,
+                m.args[0],
+                m.args[1],
+                global.ResponseTemp[refId].data.price,
+                global.ResponseTemp[refId].data.sn
+              );
+              await replyWIthInfo(sock, m, responseMessage);
             }
           } catch (error) {
             const responseMessage =
