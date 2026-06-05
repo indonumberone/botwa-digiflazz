@@ -14,7 +14,7 @@ export const replyWIthInfo = async (sock, m, text) => {
           description: "topup",
           previewType: 3,
           thumbnailUrl: "https://i.postimg.cc/J0sPnypG/image.jpg",
-          sourceUrl: "https://wa.me/6289649178812",
+          sourceUrl: "https://wa.me/1234567890",
           containsAutoReply: false,
           renderLargerThumbnail: true,
           showAdAttribution: false,

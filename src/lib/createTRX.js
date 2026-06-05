@@ -3,6 +3,7 @@ import {
   DIGIFLAZZ_BASE_URL,
   DIGIFLAZZ_API_KEY,
   USERNAME_DIGIFLAZZ,
+  TESTING_MODE,
 } from "../utils/digiflazz.js";
 import { OWNER_NAME } from "../utils/owner.js";
 import crypto from "crypto";
@@ -21,11 +22,18 @@ if (!DIGIFLAZZ_BASE_URL || !DIGIFLAZZ_API_KEY || !USERNAME_DIGIFLAZZ) {
   throw new Error("Required environment variables are not set");
 }
 
+console.log(
+  `[Digiflazz] Base URL: ${DIGIFLAZZ_BASE_URL}, Using Username: ${USERNAME_DIGIFLAZZ}, API Key: ${DIGIFLAZZ_API_KEY.substring(
+    0,
+    10
+  )}...`
+);
 export async function createDigiTRX(refId, produk_sku, customer_no, m) {
   const sign = crypto
     .createHash("md5")
     .update(USERNAME_DIGIFLAZZ + DIGIFLAZZ_API_KEY + refId)
     .digest("hex");
+
   try {
     const data = {
       username: USERNAME_DIGIFLAZZ,
@@ -33,7 +41,7 @@ export async function createDigiTRX(refId, produk_sku, customer_no, m) {
       ref_id: refId,
       customer_no: customer_no,
       sign: sign,
-      testing: true,
+      testing: TESTING_MODE,
       cb_url: "https://javansolo.muqsith.me/webhookdigi",
     };
     const res = await axios.post(`${DIGIFLAZZ_BASE_URL}v1/transaction`, data, {

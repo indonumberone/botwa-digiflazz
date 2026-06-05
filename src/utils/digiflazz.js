@@ -15,6 +15,7 @@ export const DIGIFLAZZ_API_KEY = isDevelopment
 export const DIGIFLAZZ_BASE_URL = process.env.DIGIFLAZZ_BASE_URL;
 export const USERNAME_DIGIFLAZZ = process.env.USERNAME_DIGIFLAZZ;
 export const DIGIFLAZZ_SECRET_KEY = process.env.DIGIFLAZZ_SECRET_KEY;
+export const TESTING_MODE = process.env.TESTING_MODE;
 
 console.log(
   `[Digiflazz] Running in ${isDevelopment ? "DEVELOPMENT" : "PRODUCTION"} mode`
